@@ -1,0 +1,140 @@
+.user-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  background-color: #e8f0fe;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-top: 60px;
+}
+
+.user-form {
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 400px;
+}
+
+.user-form h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.floating-label {
+  position: relative;
+}
+
+.floating-label input,
+.floating-label select {
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 16px;
+  background: transparent;
+}
+
+.floating-label label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: white;
+  color: #777;
+  padding: 0 4px;
+  transition: 0.3s ease;
+  pointer-events: none;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label,
+.floating-label select:focus + label,
+.floating-label select:valid + label {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  color: #007bff;
+  font-weight: 500;
+}
+
+select {
+  appearance: none;
+  background-color: #f9f9f9;
+  background-image: linear-gradient(to bottom, #ffffff, #f1f1f1),
+    url("data:image/svg+xml;utf8,<svg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px 16px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(to right, #007bff, #00c6ff);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+.success-message {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+.success-message {
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-weight: bold;
+  border: 1px solid #10b981;
+}
+.user-container { display: flex; justify-content: center; padding: 40px; }
+.user-form {
+  width: 100%; max-width: 400px; background: #fff; padding: 20px;
+  border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.form-group { position: relative; margin-bottom: 20px; }
+.floating-label input,
+.floating-label select {
+  width: 100%; padding: 10px 10px 10px 5px;
+  background: none; border: 1px solid #ccc; outline: none;
+}
+.floating-label label {
+  position: absolute; top: 10px; left: 10px;
+  transition: 0.2s ease all; pointer-events: none;
+}
+.floating-label input:focus ~ label,
+.floating-label input:not(:placeholder-shown) ~ label,
+.floating-label select:focus ~ label,
+.floating-label select:valid ~ label {
+  top: -14px; font-size: 12px; color: #3b82f6;
+}
+.submit-btn {
+  width: 100%; padding: 12px; background: #3b82f6; color: white;
+  border: none; border-radius: 4px; cursor: pointer;
+  font-size: 16px;
+}
+.success-message {
+  background: #d1fae5; color: #065f46;
+  padding: 10px; border-radius: 6px; margin-bottom: 15px;
+  border: 1px solid #10b981;
+}

@@ -1,0 +1,12 @@
+/* Add this in MainLayout.css or global App.css */
+.layout-body {
+  display: flex;
+}
+
+.main-content {
+  margin-left: 16rem; /* same width as sidebar */
+  padding: 2rem;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f3f4f6; /* light background */
+}
