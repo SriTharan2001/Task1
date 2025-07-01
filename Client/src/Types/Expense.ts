@@ -1,7 +1,10 @@
-export interface Expense {
+export type Expense = {
   _id: string;
-  category: string;
+  userId: string;
+  title: string;
+  date: string | Date;
   amount: number;
-  date: string;
-  title?: string; // Added optional title field
-}
+  category: string;
+  createdAt?: string;
+  updatedAt?: string;
+};

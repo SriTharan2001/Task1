@@ -1,0 +1,13 @@
+.edit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3b82f6;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+}

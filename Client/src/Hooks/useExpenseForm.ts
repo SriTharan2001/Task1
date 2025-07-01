@@ -1,51 +1,90 @@
 import { useState } from "react";
-import { createExpense } from "../Service/expenseApi";
+import { expenseService } from "../Service/expenseService";
 
 export interface ExpenseFormData {
   category: string;
-  amount: string;
+  amount: number;
   date: string;
+  userId: string;
+  title: string;
 }
 
-const useExpenseForm = () => {
+const useExpenseForm = (userId: string) => {
   const [formData, setFormData] = useState<ExpenseFormData>({
     category: "",
-    amount: "",
+    amount: 0,
     date: "",
+    userId: userId,
+    title: "Expense",  // default title
   });
 
   const [successMessage, setSuccessMessage] = useState("");
+  const [categoryError, setCategoryError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "amount" ? Number(value) : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!userId) {
+      alert("User ID is required. Please log in.");
+      return;
+    }
+
+    if (!formData.category.trim()) {
+      setCategoryError("Category is required");
+      return;
+    } else {
+      setCategoryError("");
+    }
+
+    if (!formData.amount || formData.amount <= 0) {
+      alert("Amount must be a positive number");
+      return;
+    }
+
+    if (!formData.date) {
+      alert("Date is required");
+      return;
+    }
+
+    if (isNaN(new Date(formData.date).getTime())) {
+      alert("Invalid date");
+      return;
+    }
+
     try {
-      await createExpense({
-        category: formData.category,
+      await expenseService.createExpense({
+        category: formData.category.trim(),
         amount: formData.amount,
-        date: new Date(formData.date),
+        date: formData.date,
+        userId: userId,
+        title: "Expense",
       });
 
       setSuccessMessage("Expense added successfully!");
-      setFormData({ category: "", amount: "", date: "" });
+      setFormData({ category: "", amount: 0, date: "", userId: userId, title: "Expense" });
 
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Expense API Error:", error);
-      alert((error as Error).message || "Something went wrong.");
+      if (error instanceof Error) {
+        alert(`Expense API Error: ${error.message || "Something went wrong."}`);
+      } else {
+        alert("Something went wrong.");
+      }
     }
   };
 
   const resetForm = () => {
-    setFormData({ category: "", amount: "", date: "" });
+    setFormData({ category: "", amount: 0, date: "", userId: userId, title: "Expense" });
   };
 
   return {
@@ -54,7 +93,9 @@ const useExpenseForm = () => {
     handleSubmit,
     successMessage,
     resetForm,
+    categoryError,
   };
 };
+
 
 export default useExpenseForm;

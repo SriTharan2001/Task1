@@ -1,14 +1,12 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/ExpenseTracker", {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("MongoDB connected successfully");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ MongoDB Connected");
   } catch (err) {
-    console.error("MongoDB connection error:", err.message);
+    console.error("❌ MongoDB Error:", err.message);
     process.exit(1);
   }
 };

@@ -14,17 +14,15 @@ export type User = {
 
 const BASE = "http://localhost:5000/api";
 
-export const fetchExpenses = async (): Promise<Expense[]> => {
-  const res = await fetch(`${BASE}/expenses`);
+export const fetchExpenses = async (userId: string): Promise<Expense[]> => {
+  const res = await fetch(`${BASE}/expenses?userId=${userId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
   return res.json();
 };
 
-export const fetchUsers = async (): Promise<User[]> => {
-  const res = await fetch(`${BASE}/auth`);
-  return res.json();
-};
-
-export const addExpense = async (expense: Expense): Promise<Expense> => {
+export const addExpense = async (expense: Expense & { userId: string }): Promise<Expense> => {
   const res = await fetch(`${BASE}/expenses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

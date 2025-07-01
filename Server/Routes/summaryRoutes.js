@@ -1,12 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const {
-  getMonthlySummary,
-  createExpense,
-} = require('../controllers/summaryController');
+const { getMonthlySummary } = require("../controllers/summaryController");
 
-router.get('/', getMonthlySummary);
-router.post('/', createExpense);
+router.get("/summary", getMonthlySummary);
 
 module.exports = router;
-//

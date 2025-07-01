@@ -1,60 +1,96 @@
 // src/Hooks/useExpenseDashboard.ts
 import { useEffect, useState } from "react";
-
-export type Expense = {
-  _id?: string;
-  date: string;
-  amount: number | string;
-  category?: string;
-};
-
-export type User = {
-  _id?: string;
-  name: string;
-  email: string;
-  role: string;
-};
-
-const BASE = "http://localhost:5000/api";
+import type { Expense } from "../Types/Expense";
+import type { User } from "../Types/User";
+import { BASE_URL } from "../config";
+import useStore from "pulsy";
+import type { LoginResponse } from "./useLogin";
+import { io } from 'socket.io-client';
 
 const useExpenseDashboard = () => {
+  const [auth] = useStore<LoginResponse>("auth");
+  const userId = auth?.user?.objectId;
+console.log("hey",auth?.user?.objectId);
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
- useEffect(() => {
-  const fetchAll = async () => {
+  const fetchExpenses = async () => {
     try {
-      const [res1, res2] = await Promise.all([
-        fetch(`${BASE}/expenses`),
-        fetch(`${BASE}/auth/users`)
-      ]);
+      const expensesRes = await fetch(`${BASE_URL}/expenses/fetch/${userId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      const data1 = await res1.json();
-      const data2 = await res2.json();
+      const usersRes = await fetch(`${BASE_URL}/users`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      setExpenses(data1);
-     setUsers(
-  (data2 as Array<{ _id?: string; userName: string; email: string; role: string }>).map((u) => ({
-    _id: u._id,
-    name: u.userName,  // ✅ Properly mapped
-    email: u.email,
-    role: u.role,
-  }))
-);
+      if (!expensesRes.ok) throw new Error("Failed to fetch expenses");
+      if (!usersRes.ok) throw new Error("Failed to fetch users");
 
-    } catch (err) {
+      const expensesData = await expensesRes.json();
+      const usersData = await usersRes.json();
+
+      setExpenses(expensesData);
+      setUsers(usersData);
+    } catch (err: unknown) {
       console.error(err);
-      setError("Failed to fetch data");
+      setError("Error fetching data");
     } finally {
       setLoading(false);
     }
   };
 
-  fetchAll();
-}, []);
+  useEffect(() => {
+    if (userId) {
+      if (initialLoad) {
+        fetchExpenses();
+        setInitialLoad(false);
+      }
+    } else {
+      setLoading(false);
+      setError("User ID not found");
+    }
 
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+    });
+
+    interface ExpenseUpdate {
+      expenses: Expense[];
+    }
+
+    socket.on("expense_update", (data: ExpenseUpdate) => {
+      console.log("Received expense update:", data);
+      setExpenses((prevExpenses) => {
+        // Merge the new expenses with the existing ones, avoiding duplicates
+        const newExpenses = data.expenses.filter(
+          (newExpense) =>
+            !prevExpenses.find((existingExpense) => existingExpense._id === newExpense._id)
+        );
+        return [...prevExpenses, ...newExpenses];
+      });
+    });
+
+    socket.on("connect_error", (err: unknown) => {
+      console.log(`connect_error due to ${(err as Error).message}`);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId]);
 
   return { expenses, users, loading, error };
 };

@@ -1,5 +1,5 @@
 .sidebar {
-  width: 16rem; /* w-64 */
+  width: 18rem; /* w-72 */
   height: 100vh;
   background-image: linear-gradient(to bottom, #312e81, #6b21a8, #1e3a8a);
   color: white;
@@ -38,8 +38,10 @@
 
 .nav-link:hover {
   background-color: #3730a3;
+  transform: translateX(4px);
 }
 
 .nav-link-active {
   background-color: #4338ca;
+  box-shadow: 0 0 0 2px #a78bfa; /* purple-300 */
 }

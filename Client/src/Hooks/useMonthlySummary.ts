@@ -11,13 +11,16 @@ const useMonthlySummary = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchSummary = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetch("http://localhost:5000/api/expenses/summary");
+const res = await fetch("http://localhost:5000/api/summary/summary");
       const data = await res.json();
       setSummary(data);
-      setLoading(false);
     } catch (err) {
       setError("Failed to load summary");
+    } finally {
       setLoading(false);
     }
   };

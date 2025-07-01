@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "type": "msedge",
+            "name": "mongodb://localhost:27017",
+            "request": "launch",
+            "url": "mongodb://localhost:27017"
+        }
+    ]
+}

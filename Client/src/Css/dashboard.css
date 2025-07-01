@@ -1,100 +1,101 @@
-/* .container {
-  padding: 1.5rem;
-  max-width: 72rem;
-  margin: auto;
+.dashboard-container {
+  padding: 24px;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
-.heading {
-  font-size: 1.875rem;
-  font-weight: 800;
-  margin-bottom: 2rem;
-  color: #1f2937;
+.dashboard-title {
+  font-size: 24px;
+  margin-bottom: 16px;
 }
 
-.cardGrid {
+.summary-grid {
   display: grid;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 @media (min-width: 768px) {
-  .cardGrid {
+  .summary-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-.card {
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  color: white;
-  background: linear-gradient(to right, #1e3a8a, #4338ca);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.cardTitle {
-  font-size: 1.125rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.cardAmount {
-  font-size: 1.875rem;
-  font-weight: 700;
-}
-
-.chartGrid {
+.chart-grid {
   display: grid;
-  gap: 1.5rem;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
 }
 
 @media (min-width: 1024px) {
-  .chartGrid {
+  .chart-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.chartCard {
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.card {
+  padding: 20px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
 }
 
-.chartTitle {
-  font-size: 1.125rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  color: #1f2937;
+.card:hover {
+  transform: translateY(-5px);
 }
 
-.userTableCard {
-  margin-top: 2.5rem;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.card-title {
+  font-size: 16px;
 }
 
-.table {
+.card-value {
+  font-size: 20px;
+}
+
+.chart-container-wrapper {
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container-title {
+  margin-bottom: 8px;
+}
+
+.user-table-container {
+  margin-top: 32px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+.user-table-title {
+  margin-bottom: 16px;
+}
+
+.user-table {
   width: 100%;
   text-align: left;
-  font-size: 0.875rem;
   border-collapse: collapse;
 }
 
-.tableHead {
-  background-color: #f3f4f6;
-  color: #374151;
+.user-table-header {
+  background-color: #f2f2f2;
 }
 
-.tableHead th {
-  padding: 0.5rem 1rem;
+.user-table-header-cell,
+.user-table-data-cell {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
 }
 
-.tableRow {
-  border-bottom: 1px solid #e5e7eb;
+.user-table-no-data {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  text-align: center;
 }
-
-.tableCell {
-  padding: 0.5rem 1rem;
-} */

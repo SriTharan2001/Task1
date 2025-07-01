@@ -1,7 +1,5 @@
-import { useState } from "react";
-
 // Define possible roles as a union type
-type Role = "Viewer" | "Admin" | "Editor";
+type Role = "Viewer" | "Admin" | "Manager";
 
 // Define form data interface
 export interface FormDataType {
@@ -12,84 +10,105 @@ export interface FormDataType {
 }
 
 // Define expected API response structure
-interface ApiResponse {
-  message?: string;
-  error?: string;
-}
+// interface ApiResponse {
+//   message?: string;
+//   error?: string;
+// }
 
 // Get backend base URL from .env with fallback
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+const fetchUsers = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/users`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch users");
+    }
+    const data = await response.json();
+    return data;
+  } catch (error:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+const updateUser = async (userData: FormDataType, userId: number) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+
+   if (!response.ok) {
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update user");
+      } catch (jsonError) {
+        // If parsing JSON fails, it's likely an HTML error page
+        throw new Error("Failed to update user. Server returned an unexpected response.");
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    console.error("Error updating user:", error);
+    throw error;
+  }
+};
+
+const deleteUser = async (userId: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/users/${userId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete user");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+};
+
+const addUser = async (userData: FormDataType) => {
+  try {
+ const response = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+
+   if (!response.ok) {
+      // If the response is not ok, parse the JSON and throw an error
+      const errorData = await response.json();
+      if (response.status === 400 && errorData.message === "User already exists") {
+        throw new Error("Email already registered");
+      }
+      throw new Error(errorData.message || "Failed to register user");
+    }
+
+    const data = await response.json();
+    return data.user;
+  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    console.error("Error registering user:", error);
+    throw error;
+  }
+};
+
 const useUserRegisterForm = () => {
-  const [formData, setFormData] = useState<FormDataType>({
-    userName: "",
-    email: "",
-    password: "",
-    role: "Viewer",
-  });
-
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // Handle input changes with precise typing
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    // Ensure role is a valid Role type
-    if (name === "role") {
-      if (["Viewer", "Admin", "Editor"].includes(value)) {
-        setFormData((prev) => ({ ...prev, [name]: value as Role }));
-      }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      if (!BASE_URL) {
-        throw new Error("API base URL is not defined.");
-      }
-
-      const res = await fetch(`${BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data: ApiResponse = await res.json();
-
-      if (res.ok) {
-setSuccessMessage(data.message || "Registered successfully!");
-        setErrorMessage("");
-        // Reset form after success message is cleared
-        setTimeout(() => {
-          setFormData({ userName: "", email: "", password: "", role: "Viewer" });
-          setSuccessMessage("");
-        }, 3000);
-      } else {
-        setSuccessMessage("");
-        setErrorMessage(data.error || "Registration failed");
-      }
-    } catch (err) {
-      console.error("API Error:", err);
-      setSuccessMessage("");
-      setErrorMessage(
-        err instanceof Error ? err.message : "Unable to connect to server."
-      );
-    }
-  };
-
-  return {
-    formData,
-    handleChange,
-    handleSubmit,
-    successMessage,
-    errorMessage,
-  };
+  return { fetchUsers, updateUser, deleteUser, addUser };
 };
 
 export default useUserRegisterForm;

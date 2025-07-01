@@ -1,51 +1,104 @@
-// useLogin.ts
-import { useState } from 'react';
+import { createStore, setStoreValue } from 'pulsy';
 import axios from 'axios';
 
-// Define types for the response data
+const BASE_URL = 'http://localhost:5000/api/auth';
+
 interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    username: string;
+  success: boolean;
+  message: string;
+  user?: {
+    userName: string;
+    email: string;
     role: string;
+    objectId: string;
+    password?: string;
   };
 }
 
-export default function useLogin() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export type { LoginResponse };
 
-  const login = async (username: string, password: string): Promise<LoginResponse | null> => {
-    setLoading(true);
-    setError(null);
+createStore(
+  'auth',
+  {
+    user: null,
+  },
+  { persist: true }
+);
 
-    try {
-      const response = await axios.post<LoginResponse>('/api/login', { username, password });
-      const { token, user } = response.data;
+export const login = async (email: string, password: string, role: string): Promise<boolean> => {
+  try {
+    // API call
+    const response = await axios.post<LoginResponse>(`${BASE_URL}/login`, {
+      email,
+      password,
+      role,
+    });
 
-      if (!token || !user) {
-        throw new Error('Invalid response from server');
-      }
+    console.log("Login API Response:", response);
 
-      localStorage.setItem('token', token);
+    const data = response.data;
 
-      return { token, user };
-    } catch (err: unknown) {
-      // Check if it's an axios error by checking for response property
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } }, message?: string };
-        setError(axiosError.response?.data?.message || axiosError.message || 'Login failed');
-      } else if (err instanceof Error) {
-        setError(err.message || 'Something went wrong');
-      } else {
-        setError('An unknown error occurred');
-      }
-      return null;
-    } finally {
-      setLoading(false);
+    if (!data.success) {
+      throw new Error(data.message || "Login failed");
     }
-  };
 
-  return { login, loading, loginError: error };
-}
+    if (!data.user) {
+      throw new Error("User data not returned from server.");
+    }
+
+    const {
+      userName,
+      email: userEmail,
+      role: userRole,
+      objectId: _id,
+    } = data.user;
+
+    setStoreValue('auth', {
+      user: { userName, email: userEmail, role: userRole, _id },
+    });
+
+    return true;
+  } catch (error) {
+    let message = "Login failed";
+
+    // try-catch inside catch to safely extract message
+    try {
+ interface AxiosErrorWithResponse {
+    response?: {
+      data?: {
+        message?: string;
+        [key: string]: unknown;
+      };
+    };
+    message?: string;
+    [key: string]: unknown;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as AxiosErrorWithResponse).response === "object"
+  ) {
+    const responseData = (error as AxiosErrorWithResponse).response?.data;
+    if (responseData && typeof responseData === "object" && "message" in responseData) {
+      message = String(responseData.message);
+    } else if ("message" in error) {
+      message = String((error as { message?: string }).message);
+    }
+  } else if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: string }).message === "string"
+  ) {
+    message = (error as { message?: string }).message ?? "Login failed";
+  }
+    } catch {
+      message = "Unknown error occurred";
+    }
+
+    console.error("Login error:", message, error);
+    throw new Error(message);
+  }
+};

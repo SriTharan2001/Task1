@@ -1,0 +1,76 @@
+/* ExpenseForm.css */
+.expense-form-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.expense-form-group {
+  margin-bottom: 15px;
+}
+
+.expense-form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.expense-form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.expense-form-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.expense-form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.expense-form-button {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.expense-form-button:hover {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.expense-form-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.expense-form-button.cancel {
+  background-color: #e5e7eb;
+  color: #1f2937;
+  background: none;
+  color: #6b7280;
+  box-shadow: none;
+}
+
+.expense-form-button.cancel:hover {
+  background-color: #d1d5db;
+  transform: none;
+  box-shadow: none;
+}

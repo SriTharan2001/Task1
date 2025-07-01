@@ -1,11 +1,35 @@
 import React from 'react';
 
-
 const Navbar: React.FC = () => {
   return (
-    <nav className="bg-gradient-to-r from-blue-900 via-indigo-800 to-purple-900 h-[80px] text-white p-4 flex justify-between items-center shadow-xl">
-      <div className="flex-1 flex justify-center">
-        <h2 className="text-2xl font-extrabold tracking-wider">Expense Data</h2>
+    <nav
+      style={{
+        background: 'linear-gradient(to right, #1e3a8a, #3730a3, #5b21b6)',
+        height: '80px',
+        color: '#ffffff',
+        padding: '16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+          }}
+        >
+          Expense Data
+        </h2>
       </div>
     </nav>
   );

@@ -19,15 +19,15 @@ export const useUserList = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/users', {
+      const response = await axios.get<User[]>('http://localhost:5000/api/users', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(response.data as User[]);
+      setUsers(response.data);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        setError(`Failed to fetch users: ${err.message}`);
       } else {
-        setError('Failed to fetch users');
+        setError('Failed to fetch users due to an unknown error');
       }
     } finally {
       setLoading(false);
