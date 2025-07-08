@@ -1,5 +1,6 @@
 import React from 'react';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import type { SummaryData } from '../Hooks/useMonthlySummary';
 import useMonthlySummary from '../Hooks/useMonthlySummary';
 
@@ -16,29 +17,27 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
     doc.setFontSize(18);
     doc.text('Monthly Summary', 14, 22);
 
-    doc.setFontSize(12);
-    let startY = 30;
-
     if (summary.length === 0) {
-      doc.text('No expenses found.', 14, startY);
+      doc.setFontSize(12);
+      doc.text('No expenses found.', 14, 32);
     } else {
-      // Table headers
-      doc.text('Month', 14, startY);
-      doc.text('Total (₹)', 100, startY);
-      startY += 8;
-
-      // Table rows
-      summary.forEach(({ month, total }) => {
-        doc.text(month, 14, startY);
-        doc.text(
+      autoTable(doc, {
+        startY: 30,
+        head: [['Month', 'Total (₹)']],
+        body: summary.map(({ month, total }) => [
+          month,
           `₹${total.toLocaleString('en-IN', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`,
-          100,
-          startY
-        );
-        startY += 8;
+        ]),
+        styles: {
+          fontSize: 12,
+        },
+        headStyles: {
+          fillColor: [55, 48, 163],
+          textColor: 255,
+        },
       });
     }
 
@@ -184,7 +183,7 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
             </thead>
             <tbody>
               {summary.length > 0 ? (
-                summary.map(({ month, total }: SummaryData) => (
+                summary.map(({ month, total }) => (
                   <tr
                     key={month}
                     style={{
@@ -213,7 +212,7 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
                         fontWeight: 600,
                       }}
                     >
-                      ₹{total.toLocaleString('en-IN', {
+                      RS {total.toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

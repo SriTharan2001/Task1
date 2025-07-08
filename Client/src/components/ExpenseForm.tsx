@@ -1,19 +1,22 @@
 import React, { useEffect } from "react";
 import useExpenseForm from "../Hooks/useExpenseForm";
-import { useNavigate } from "react-router-dom";
+import "../Css/ExpenseForm.css";
 
 const ExpenseFormDesign: React.FC = () => {
-  const navigate = useNavigate();
-  const [userId, setUserId] = React.useState<string | null>(null);
+  // இதை வேண்டாம் என்றால் நீக்கலாம்:
+  // const navigate = useNavigate();
+
+  const [userId, setUserId] = React.useState<string>("");
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem('userId');
-    if (!storedUserId) {
-      navigate('/login');
-      return;
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else {
+      // userId இல்லையென்றாலும், form காட்டவேண்டும் என சொன்னீர்கள்.
+      setUserId(""); 
     }
-    setUserId(storedUserId);
-  }, [navigate]);
+  }, []);
 
   const {
     formData,
@@ -22,11 +25,7 @@ const ExpenseFormDesign: React.FC = () => {
     successMessage,
     resetForm,
     categoryError,
-  } = useExpenseForm(userId || '');
-
-  if (!userId) {
-    return <p>Loading...</p>;
-  }
+  } = useExpenseForm(userId);
 
   return (
     <div
@@ -113,7 +112,7 @@ const ExpenseFormDesign: React.FC = () => {
               fontWeight: "600"
             }}
           >
-            Amount (₹)
+            Amount (RS)
           </label>
           <input
             type="number"
@@ -156,21 +155,10 @@ const ExpenseFormDesign: React.FC = () => {
             name="date"
             value={formData.date}
             onChange={handleChange}
-            placeholder="Select date"
             required
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              border: "1px solid #ccc",
-              borderRadius: "0.75rem",
-              outline: "none"
-            }}
-            onFocus={(e) => {
-              e.target.style.boxShadow = "0 0 0 2px #3b82f6";
-            }}
-            onBlur={(e) => {
-              e.target.style.boxShadow = "none";
-            }}
+            className="expense-form-input"
+            title="Select date"
+            placeholder="Select date"
           />
         </div>
 

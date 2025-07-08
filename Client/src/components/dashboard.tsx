@@ -1,25 +1,34 @@
+// src/components/Dashboard.tsx
 import React, { useMemo } from "react";
-import { Bar, Pie } from "react-chartjs-2";
+import { Pie, Bar } from "react-chartjs-2";
+import useExpenseDashboard from "../Hooks/useExpenseDashboard";
+import useMonthlySummary from "../Hooks/useMonthlySummary";
+import useCategoryExpenses from "../Hooks/useCategoryExpenses";
+import useExpenseCounters from "../Hooks/useExpenseCounters";
+
 import {
   Chart as ChartJS,
+  ArcElement,
   BarElement,
   CategoryScale,
   LinearScale,
-  ArcElement,
   Tooltip,
   Legend,
+  Title,
 } from "chart.js";
-import useExpenseDashboard from "../Hooks/useExpenseDashboard";
 
-type Expense = {
-  _id: string;
-  userId: string;
-  amount: number | string;
-  category?: string;
-  date: string | Date;
-};
+import type { Chart, TooltipItem } from "chart.js";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, ArcElement, Tooltip, Legend);
+// Register ChartJS components
+ChartJS.register(
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  Title
+);
 
 const COLORS = [
   "rgba(59, 130, 246, 0.7)",
@@ -28,107 +37,192 @@ const COLORS = [
   "rgba(239, 68, 68, 0.7)",
   "rgba(168, 85, 247, 0.7)",
   "rgba(34, 197, 94, 0.7)",
-  "rgba(59, 130, 246, 0.5)",
   "rgba(251, 113, 133, 0.7)",
 ];
 
-const parseAmount = (value: number | string | undefined): number => {
-  const n = Number(value);
-  return isNaN(n) ? 0 : n;
-};
-
-const getMonthlyExpenseData = (expenses: Expense[]) => {
+const getMonthlyExpenseData = (summary: { month: string; total: number }[]) => {
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
   const data = months.map((month) => ({ month, amount: 0 }));
-  expenses.forEach((e) => {
-    const dt = new Date(e.date);
-    if (!isNaN(dt.getTime())) {
-      data[dt.getMonth()].amount += parseAmount(e.amount);
+  summary.forEach((s) => {
+    const [, m] = s.month.split("-");
+    const index = parseInt(m, 10) - 1;
+    if (index >= 0 && index < 12) {
+      data[index].amount += s.total;
     }
   });
   return data;
 };
 
-const getCategoryWiseData = (expenses: Expense[]) => {
-  const totals: Record<string, number> = {};
-  expenses.forEach((e) => {
-    const cat = e.category || "Uncategorized";
-    totals[cat] = (totals[cat] || 0) + parseAmount(e.amount);
-  });
-  return Object.entries(totals).map(([name, value]) => ({ name, value }));
-};
+// Card component
+const Card: React.FC<{ title: string; value: string }> = ({ title, value }) => (
+  <div
+    style={{
+      padding: "16px",
+      backgroundColor: "#1e40af",
+      color: "#fff",
+      borderRadius: "8px",
+    }}
+  >
+    <h3>{title}</h3>
+    <p style={{ fontSize: "24px", fontWeight: "bold" }}>{value}</p>
+  </div>
+);
 
-const getTodayExpenses = (expenses: Expense[]): string => {
-  const today = new Date().toISOString().split("T")[0];
-  const sum = expenses
-    .filter((e) => e.date.toString().startsWith(today))
-    .reduce((acc, e) => acc + parseAmount(e.amount), 0);
-  return sum.toFixed(2);
-};
-
-const getMonthlyExpenses = (expenses: Expense[]): string => {
-  const now = new Date();
-  const sum = expenses
-    .filter((e) => {
-      const dt = new Date(e.date);
-      return (
-        !isNaN(dt.getTime()) &&
-        dt.getMonth() === now.getMonth() &&
-        dt.getFullYear() === now.getFullYear()
-      );
-    })
-    .reduce((acc, e) => acc + parseAmount(e.amount), 0);
-  return sum.toFixed(2);
-};
-
-const getTotalExpenses = (expenses: Expense[]): string =>
-  expenses.reduce((acc, e) => acc + parseAmount(e.amount), 0).toFixed(2);
+// ChartContainer component
+const ChartContainer: React.FC<{ title: string; children: React.ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <div
+    style={{
+      backgroundColor: "#fff",
+      borderRadius: "8px",
+      padding: "16px",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      height: "500px",
+    }}
+  >
+    <h3
+      style={{
+        marginBottom: "16px",
+        fontSize: "18px",
+        fontWeight: "bold",
+        textAlign: "center",
+      }}
+    >
+      {title}
+    </h3>
+    <div style={{ height: "calc(100% - 40px)" }}>{children}</div>
+  </div>
+);
 
 const Dashboard: React.FC = () => {
-  const { expenses, loading, error } = useExpenseDashboard();
+  const { loading: expensesLoading, error: expenseError } = useExpenseDashboard();
+  const { summary, loading: summaryLoading, error: summaryError } = useMonthlySummary();
+  const { data: categoryData, loading: categoryLoading, error: categoryError } = useCategoryExpenses();
+  const { data: counters, loading: countersLoading, error: countersError } = useExpenseCounters();
 
-  const monthlyData = useMemo(() => getMonthlyExpenseData(expenses), [expenses]);
-  const categoryData = useMemo(() => getCategoryWiseData(expenses), [expenses]);
-  const total = useMemo(() => getTotalExpenses(expenses), [expenses]);
-  const monthly = useMemo(() => getMonthlyExpenses(expenses), [expenses]);
-  const today = useMemo(() => getTodayExpenses(expenses), [expenses]);
+  const monthlyData = useMemo(() => getMonthlyExpenseData(summary), [summary]);
 
-  if (loading) return <div style={{ padding: "24px", textAlign: "center" }}>Loading...</div>;
-  if (error) return <div style={{ padding: "24px", textAlign: "center", color: "#ef4444" }}>Error: {error}</div>;
+  const pieTotal = useMemo(
+    () => categoryData.reduce((sum, item) => sum + item.value, 0),
+    [categoryData]
+  );
+
+  if (expensesLoading || summaryLoading || categoryLoading || countersLoading) {
+    return <div style={{ padding: "24px", textAlign: "center" }}>Loading...</div>;
+  }
+
+  if (expenseError || summaryError || categoryError || countersError) {
+    return (
+      <div style={{ padding: "24px", textAlign: "center", color: "red" }}>
+        {expenseError || summaryError || categoryError || countersError}
+      </div>
+    );
+  }
+
+  const pieData = {
+    labels: categoryData.map((d) => `${d.name} (${d.count})`),
+    datasets: [
+      {
+        data: categoryData.map((d) => d.value),
+        backgroundColor: COLORS.slice(0, categoryData.length),
+        borderColor: COLORS.map((c) => c.replace("0.7", "1")).slice(0, categoryData.length),
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "right" as const,
+        labels: {
+          font: { size: 14 },
+          padding: 20,
+          generateLabels: (chart: Chart) => {
+            const labelsRaw = chart.data.labels;
+            const labels: string[] =
+              typeof labelsRaw === "string"
+                ? [labelsRaw]
+                : Array.isArray(labelsRaw)
+                  ? (labelsRaw as string[])
+                  : [];
+
+
+
+            return labels.map((label: string, i: number) => ({
+              text: `${label} - RS ${(chart.data.datasets[0].data[i] as number).toFixed(2)} (${(
+                ((chart.data.datasets[0].data[i] as number) / pieTotal) *
+                100
+              ).toFixed(1)}%)`,
+              fillStyle: (chart.data.datasets[0].backgroundColor as string[])[i],
+              index: i,
+            }));
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<"pie">) => {
+            const label = context.label || "";
+            const value = context.raw as number;
+            const percentage = ((value / pieTotal) * 100).toFixed(1);
+            return `${label}: RS ${value.toFixed(2)} (${percentage}%)`;
+          },
+        },
+      },
+      title: {
+        display: true,
+        text: "Expenses By Category",
+        font: { size: 16 },
+      },
+    },
+  };
 
   const barData = {
     labels: monthlyData.map((d) => d.month),
     datasets: [
       {
-        label: "₹",
+        label: "Monthly Expenses (RS)",
         data: monthlyData.map((d) => d.amount),
         backgroundColor: COLORS[0],
+        borderColor: COLORS[0].replace("0.7", "1"),
         borderWidth: 1,
       },
     ],
   };
 
-  const pieData = {
-    labels: categoryData.map((d) => d.name),
-    datasets: [
-      {
-        data: categoryData.map((d) => d.value),
-        backgroundColor: COLORS,
-        borderWidth: 1,
+  const barOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "top" as const },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<"bar">) =>
+            `RS ${(context.raw as number).toFixed(2)}`,
+        },
       },
-    ],
+      title: {
+        display: true,
+        text: "Monthly Summary",
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: "Amount (RS)" },
+      },
+      x: {
+        title: { display: true, text: "Month" },
+      },
+    },
   };
-
-  const basePlugins = {
-    legend: { position: "top" as const },
-    tooltip: { enabled: true },
-  };
-
-  const barOptions = { responsive: true, plugins: basePlugins };
-  const pieOptions = { responsive: true, plugins: basePlugins };
 
   return (
     <div style={{ padding: "24px", maxWidth: "1280px", margin: "0 auto" }}>
@@ -137,14 +231,14 @@ const Dashboard: React.FC = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "16px",
           marginBottom: "24px",
         }}
       >
-        <Card title="Total" value={`₹${total}`} />
-        <Card title="This Month" value={`₹${monthly}`} />
-        <Card title="Today" value={`₹${today}`} />
+        <Card title="Total" value={`RS ${counters?.total?.toFixed(2) ?? "0.00"}`} />
+        <Card title="This Month" value={`RS ${counters?.monthly?.toFixed(2) ?? "0.00"}`} />
+        <Card title="Today" value={`RS ${counters?.daily?.toFixed(2) ?? "0.00"}`} />
       </div>
 
       <div
@@ -154,46 +248,16 @@ const Dashboard: React.FC = () => {
           gap: "24px",
         }}
       >
-        <ChartContainer title="Monthly Expenses">
-          <Bar data={barData} options={barOptions} />
-        </ChartContainer>
-        <ChartContainer title="By Category">
+        <ChartContainer title="Expenses By Category">
           <Pie data={pieData} options={pieOptions} />
+        </ChartContainer>
+
+        <ChartContainer title="Monthly Summary">
+          <Bar data={barData} options={barOptions} />
         </ChartContainer>
       </div>
     </div>
   );
 };
-
-const Card: React.FC<{ title: string; value: string }> = ({ title, value }) => (
-  <div
-    style={{
-      padding: "16px",
-      backgroundColor: "#1e40af",
-      color: "#ffffff",
-      borderRadius: "8px",
-    }}
-  >
-    <h3 style={{ fontSize: "18px" }}>{title}</h3>
-    <p style={{ fontSize: "24px" }}>{value}</p>
-  </div>
-);
-
-const ChartContainer: React.FC<{ title: string; children: React.ReactNode }> = ({
-  title,
-  children,
-}) => (
-  <div
-    style={{
-      padding: "16px",
-      backgroundColor: "#ffffff",
-      borderRadius: "8px",
-      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    }}
-  >
-    <h3 style={{ marginBottom: "8px" }}>{title}</h3>
-    <div style={{ height: "300px" }}>{children}</div>
-  </div>
-);
 
 export default Dashboard;

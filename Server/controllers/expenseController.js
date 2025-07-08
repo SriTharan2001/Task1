@@ -89,19 +89,24 @@ exports.deleteExpense = async (req, res) => {
   }
 };
 
+// controllers/expenseController.js
 exports.fetchExpensesByCategory = async (req, res) => {
   try {
     const { userId, category } = req.params;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid userId" });
     }
-    const expenses = await Expense.find({ userId: new mongoose.Types.ObjectId(userId), category });
+    const expenses = await Expense.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      category,
+    });
     res.json(expenses);
   } catch (err) {
     console.error("Fetch error:", err);
     res.status(500).json({ message: "Failed to fetch expenses" });
   }
 };
+
 
 exports.fetchExpensesByDate = async (req, res) => {
   try {
@@ -114,5 +119,98 @@ exports.fetchExpensesByDate = async (req, res) => {
   } catch (err) {
     console.error("Fetch error:", err);
     res.status(500).json({ message: "Failed to fetch expenses" });
+  }
+};
+
+
+
+
+// controllers/expenseController.js
+exports.getCategoryWiseExpenses = async (req, res) => {
+  try {
+    const expenses = await Expense.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { totalAmount: -1 } }
+    ]);
+
+    const result = expenses.map(item => ({
+      name: item._id || "Uncategorized",
+      value: item.totalAmount,
+      count: item.count
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Error fetching category expenses:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// totel
+
+
+
+// Get total of all expenses
+exports.getTotalExpenses = async (req, res) => {
+  try {
+    const total = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    res.json({ total: total[0]?.total || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get current month's expenses
+exports.getMonthlyExpenses = async (req, res) => {
+  try {
+    const now = new Date();
+    const monthly = await Expense.aggregate([
+      { 
+        $match: { 
+          date: {
+            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+            $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)
+          }
+        } 
+      },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    res.json({ total: monthly[0]?.total || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get today's expenses
+exports.getTodayExpenses = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const daily = await Expense.aggregate([
+      { 
+        $match: { 
+          date: {
+            $gte: today,
+            $lt: tomorrow
+          }
+        } 
+      },
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    res.json({ total: daily[0]?.total || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

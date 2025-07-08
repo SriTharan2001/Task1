@@ -3,17 +3,17 @@ const Expense = require("../Models/Expense");
 
 exports.getMonthlySummary = async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
+    let matchStage = {};
+    // If userId is sent as query param (e.g., /api/summary?userId=xxx)
+    if (req.query.userId) {
+      matchStage.userId = mongoose.Types.ObjectId(req.query.userId);
     }
 
     const summary = await Expense.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId) } },  // Filter by userId
+      { $match: matchStage },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$date" } }, // Group by year-month
+          _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
           total: { $sum: "$amount" },
         },
       },

@@ -1,5 +1,5 @@
 import React from 'react';
-import "../Css/Slidebar.css"; // ✅ Only one import – ensure the file exists
+import "../Css/Slidebar.css"; // Ensure the file exists and path is correct
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -7,6 +7,7 @@ import {
   List,
   Calendar,
   User,
+  LogOut, // Added LogOut icon
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -26,13 +27,13 @@ const Sidebar: React.FC = () => {
           Dashboard
         </NavLink>
         <NavLink
-          to="/User"
+          to="/user"
           className={({ isActive }) =>
             `nav-link ${isActive ? 'nav-link-active' : ''}`
           }
         >
           <User size={20} />
-          User
+          Users
         </NavLink>
         <NavLink
           to="/add-expense"
@@ -43,9 +44,6 @@ const Sidebar: React.FC = () => {
           <Plus size={20} />
           Add Expense
         </NavLink>
-
-
-
         <NavLink
           to="/expenses"
           className={({ isActive }) =>
@@ -55,7 +53,6 @@ const Sidebar: React.FC = () => {
           <List size={20} />
           View Expenses
         </NavLink>
-
         <NavLink
           to="/monthly-summary"
           className={({ isActive }) =>
@@ -64,6 +61,15 @@ const Sidebar: React.FC = () => {
         >
           <Calendar size={20} />
           Monthly Summary
+        </NavLink>
+        <NavLink
+          to="/login"
+          className={({ isActive }) =>
+            `nav-link ${isActive ? 'nav-link-active' : ''}`
+          }
+        >
+          <LogOut size={20} /> {/* Added LogOut icon */}
+          Log Out
         </NavLink>
       </nav>
     </aside>

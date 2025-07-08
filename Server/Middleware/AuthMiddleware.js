@@ -16,5 +16,10 @@ const authMiddleware = (req, res, next) => {
     res.status(401).json({ message: "Token is not valid" });
   }
 };
+// பாதுகாக்கப்பட்ட API
+app.get('/protected', verifyToken, (req, res) => {
+  res.json({ message: 'பாதுகாக்கப்பட்ட தரவு', user: req.user });
+});
 
+app.listen(5000, () => console.log('Server running on port 5000'));
 module.exports = authMiddleware;

@@ -6,11 +6,14 @@
   ],
   "compilerOptions": {
     "strict": true,
+    "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "target": "esnext",
+      "lib": ["es2017", "dom"],
     "jsx": "react-jsx"
   }
+  
 }

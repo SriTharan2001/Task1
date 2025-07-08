@@ -1,32 +1,100 @@
-export type Expense = {
-  _id?: string;
-  date: string;
-  amount: number;
-  category?: string;
+// src/Hooks/useExpenseDashboard.ts
+import { useEffect, useState } from "react";
+import type { Expense } from "../Types/Expense";
+import type { User } from "../Types/User";
+import { BASE_URL } from "../config";
+import useStore from "pulsy";
+// import type { LoginResponse } from "./useLogin";
+// Update the import path below if 'useLogin' is located elsewhere, e.g.:
+import type { LoginResponse } from "../Hooks/useLogin";
+import { io } from 'socket.io-client';
+
+const useExpenseDashboard = () => {
+  const [auth] = useStore<LoginResponse>("auth");
+  const userId = auth?.user?.objectId;
+console.log("hey",auth?.user?.objectId);
+
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  const fetchExpenses = async () => {
+    try {
+      const expensesRes = await fetch(`${BASE_URL}/expenses/fetch/${userId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const usersRes = await fetch(`${BASE_URL}/users`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!expensesRes.ok) throw new Error("Failed to fetch expenses");
+      if (!usersRes.ok) throw new Error("Failed to fetch users");
+
+      const expensesData = await expensesRes.json();
+      const usersData = await usersRes.json();
+
+      setExpenses(expensesData);
+      setUsers(usersData);
+    } catch (err: unknown) {
+      console.error(err);
+      setError("Error fetching data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      if (initialLoad) {
+        fetchExpenses();
+        setInitialLoad(false);
+      }
+    } else {
+      setLoading(false);
+      setError("User ID not found");
+    }
+
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+    });
+
+    interface ExpenseUpdate {
+      expenses: Expense[];
+    }
+
+    socket.on("expense_update", (data: ExpenseUpdate) => {
+      console.log("Received expense update:", data);
+      setExpenses((prevExpenses) => {
+        // Merge the new expenses with the existing ones, avoiding duplicates
+        const newExpenses = data.expenses.filter(
+          (newExpense) =>
+            !prevExpenses.find((existingExpense) => existingExpense._id === newExpense._id)
+        );
+        return [...prevExpenses, ...newExpenses];
+      });
+    });
+
+    socket.on("connect_error", (err: unknown) => {
+      console.log(`connect_error due to ${(err as Error).message}`);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userId]);
+
+  return { expenses, users, loading, error };
 };
 
-export type User = {
-  _id?: string;
-  name: string;
-  email: string;
-  role: string;
-};
-
-const BASE = "http://localhost:5000/api";
-
-export const fetchExpenses = async (userId: string): Promise<Expense[]> => {
-  const res = await fetch(`${BASE}/expenses?userId=${userId}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-  return res.json();
-};
-
-export const addExpense = async (expense: Expense & { userId: string }): Promise<Expense> => {
-  const res = await fetch(`${BASE}/expenses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(expense),
-  });
-  return res.json();
-};
+export default useExpenseDashboard;

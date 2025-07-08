@@ -1,44 +1,40 @@
 // src/Hooks/useExpenseDashboard.ts
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import useStore from "pulsy";
 import type { Expense } from "../Types/Expense";
 import type { User } from "../Types/User";
-import { BASE_URL } from "../config";
-import useStore from "pulsy";
-import type { LoginResponse } from "./useLogin";
-import { io } from 'socket.io-client';
+import type { LoginResponse } from "../Types/LoginResponse.ts";
+import { expenseService } from "../Service/expenseService.ts";
+
+// Define your backend base URL here
+const BASE_URL = "http://localhost:5000";
 
 const useExpenseDashboard = () => {
   const [auth] = useStore<LoginResponse>("auth");
   const userId = auth?.user?.objectId;
-console.log("hey",auth?.user?.objectId);
-
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialLoad, setInitialLoad] = useState(true);
 
   const fetchExpenses = async () => {
     try {
-      const expensesRes = await fetch(`${BASE_URL}/expenses/fetch/${userId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+      if (!userId) {
+        setExpenses([]);
+        setLoading(false);
+        return;
+      }
 
-      const usersRes = await fetch(`${BASE_URL}/users`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!expensesRes.ok) throw new Error("Failed to fetch expenses");
-      if (!usersRes.ok) throw new Error("Failed to fetch users");
-
-      const expensesData = await expensesRes.json();
-      const usersData = await usersRes.json();
-
+      // Fetch all expenses (or modify to fetch by category)
+      const expensesData = await expenseService.getExpenses(userId);
       setExpenses(expensesData);
+      // Optionally fetch users if needed
+      const usersRes = await fetch(`${BASE_URL}/users`);
+      if (!usersRes.ok) throw new Error("Failed to fetch users");
+      const usersData = await usersRes.json();
       setUsers(usersData);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
       setError("Error fetching data");
     } finally {
@@ -47,46 +43,23 @@ console.log("hey",auth?.user?.objectId);
   };
 
   useEffect(() => {
-    if (userId) {
-      if (initialLoad) {
-        fetchExpenses();
-        setInitialLoad(false);
-      }
-    } else {
-      setLoading(false);
-      setError("User ID not found");
-    }
+    fetchExpenses();
+    if (!userId) return;
 
     const socket = io("http://localhost:5000");
-
-    socket.on("connect", () => {
-      console.log("Connected to WebSocket server");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Disconnected from WebSocket server");
-    });
-
-    interface ExpenseUpdate {
-      expenses: Expense[];
-    }
-
-    socket.on("expense_update", (data: ExpenseUpdate) => {
+    socket.on("connect", () => console.log("Connected to WebSocket server"));
+    socket.on("expense_update", (data: { expenses: Expense[] }) => {
       console.log("Received expense update:", data);
-      setExpenses((prevExpenses) => {
-        // Merge the new expenses with the existing ones, avoiding duplicates
+      setExpenses((prev) => {
         const newExpenses = data.expenses.filter(
-          (newExpense) =>
-            !prevExpenses.find((existingExpense) => existingExpense._id === newExpense._id)
+          (newExpense) => !prev.find((e) => e._id === newExpense._id)
         );
-        return [...prevExpenses, ...newExpenses];
+        return [...prev, ...newExpenses];
       });
     });
-
-    socket.on("connect_error", (err: unknown) => {
-      console.log(`connect_error due to ${(err as Error).message}`);
+    socket.on("connect_error", (err: Error) => {
+      console.log(`connect_error: ${err.message}`);
     });
-
     return () => {
       socket.disconnect();
     };
