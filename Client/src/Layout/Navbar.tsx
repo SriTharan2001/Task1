@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Assuming you have a User type. If not, you can remove the typing or adjust as needed
 interface User {
@@ -11,6 +12,16 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ user }) => {
+  const navigate = useNavigate(); // Hook for navigation
+
+  const handleProfileClick = () => {
+    if (user) {
+      navigate('/profile'); // Navigate to profile if logged in
+    } else {
+      navigate('/login'); // Navigate to login if not logged in
+    }
+  };
+
   return (
     <nav
       style={{
@@ -77,6 +88,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                 cursor: 'pointer',
               }}
               title={user.name}
+              onClick={handleProfileClick} // Add click handler
             >
               {user.name.charAt(0).toUpperCase()}
             </div>
@@ -97,8 +109,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
               cursor: 'pointer',
             }}
             title="Login"
+            onClick={handleProfileClick} // Add click handler
           >
-            ?
+            S
           </div>
         )}
       </div>

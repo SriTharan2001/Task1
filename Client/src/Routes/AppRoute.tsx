@@ -1,14 +1,14 @@
-// src/Routes/AppRoute.tsx
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "../components/dashboard";
-import ExpenseList from "../components/ExpenseListDesign";
-import MonthlySummary from "../components/MonthlySummary";
-import ExpenseFormDesign from "../components/ExpenseForm";
-import LoginForm from "../components/LogIn";
-import MainLayout from "../Layout/MainLayout";
-import User from "../components/User";
-import ProtectedRoute from "./ProtectedRoute";
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from '../components/dashboard';
+import ExpenseList from '../components/ExpenseListDesign';
+import MonthlySummary from '../components/MonthlySummary';
+import ExpenseFormDesign from '../components/ExpenseForm';
+import LoginForm from '../components/LogIn';
+import MainLayout from '../Layout/MainLayout';
+import User from '../components/User';
+import ProtectedRoute from './ProtectedRoute';
+import Profile from '../components/profile'; // Fixed casing
 
 const AppRoutes = () => (
   <Routes>
@@ -53,6 +53,14 @@ const AppRoutes = () => (
         element={
           <ProtectedRoute>
             <User />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

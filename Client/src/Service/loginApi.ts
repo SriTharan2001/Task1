@@ -1,28 +1,39 @@
-import { setStoreValue } from 'pulsy';
-import axios from 'axios';
-import { BASE_URL } from '../config';
-import type { LoginResponse } from '../Types/ApiResponse';
+// src/Hooks/useLogin.ts
 
-const BASE_URL_AUTH = `${BASE_URL}/api/auth`;
+import { useState } from "react";
 
-export const login = async (email: string, password: string) => {
-  try {
-    const response: { data: LoginResponse } = await axios.post(`${BASE_URL_AUTH}/users`, { email, password });
-console.log("Login API Response:", response.data);
-    if (response.data.message === 'success') {
-      window.location.href = '/dashboard'; // Redirect to dashboard
-      return true;
-    } else {
-      console.error('Login failed', response.data.message);
-      return false;
+export type LoginResponse = {
+  token: string;
+  user: {
+    objectId: string;
+    username: string;
+    email?: string;
+  };
+};
+
+const useLogin = () => {
+  const [auth, setAuth] = useState<LoginResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const login = async (username: string, password: string) => {
+    try {
+      const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) throw new Error("Login failed");
+
+      const data: LoginResponse = await response.json();
+      setAuth(data);
+      return data;
+    } catch (err) {
+      setError("Login failed. Please try again.");
     }
-  } catch (error) {
-    console.error('Login failed', error);
-    return false;
-  }
+  };
+
+  return { auth, login, error };
 };
 
-export const logout = () => {
-  setStoreValue('auth', { user: null, token: null });
-  localStorage.removeItem('pulsy_auth');
-};
+export default useLogin;

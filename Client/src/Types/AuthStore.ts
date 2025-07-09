@@ -8,3 +8,8 @@ export interface AuthUser {
 export interface AuthStore {
   user: AuthUser | null;
 }
+// src/Types/AuthStore.ts
+export interface AuthStore {
+ 
+  token: string | null;
+}

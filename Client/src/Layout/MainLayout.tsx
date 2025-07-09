@@ -1,20 +1,23 @@
-// src/Layout/MainLayout.tsx
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
-import Sidebar from './Slidebar';
-import  '../Css/MainLayout.css'; // ✅ Fix filename if needed
+// src/Layout/MainLayout.tsx (example)
+import { getStoreValue } from 'pulsy';
+import { Navigate, Outlet } from 'react-router-dom';
+import Sidebar from './Slidebar.tsx';
+import type { AuthStore } from '../Types/AuthStore';
+import Navbar from './Navbar.tsx';
 
 const MainLayout: React.FC = () => {
+  const authStore = getStoreValue<AuthStore>('auth');
+  if (!authStore?.user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
     <div className="main-layout">
+      <Sidebar />
       <Navbar />
-      <div className="layout-body">
-        <Sidebar />
-        <main className="main-content">
-          <Outlet />
-        </main>
-      </div>
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 };
