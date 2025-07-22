@@ -1,7 +1,7 @@
 // src/components/Dashboard.tsx
 import React, { useMemo } from "react";
 import { Pie, Bar } from "react-chartjs-2";
-import useExpenseDashboard from "../Hooks/useExpenseDashboard";
+import useExpenseDashboard from "../Hooks/useExpenseDashBoard.ts";
 import useMonthlySummary from "../Hooks/useMonthlySummary";
 import useCategoryExpenses from "../Hooks/useCategoryExpenses";
 import useExpenseCounters from "../Hooks/useExpenseCounters";
@@ -42,8 +42,18 @@ const COLORS = [
 
 const getMonthlyExpenseData = (summary: { month: string; total: number }[]) => {
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const data = months.map((month) => ({ month, amount: 0 }));
   summary.forEach((s) => {
@@ -58,52 +68,41 @@ const getMonthlyExpenseData = (summary: { month: string; total: number }[]) => {
 
 // Card component
 const Card: React.FC<{ title: string; value: string }> = ({ title, value }) => (
-  <div
-    style={{
-      padding: "16px",
-      backgroundColor: "#1e40af",
-      color: "#fff",
-      borderRadius: "8px",
-    }}
-  >
+  <div className="p-4 bg-blue-900 text-white rounded-lg">
     <h3>{title}</h3>
-    <p style={{ fontSize: "24px", fontWeight: "bold" }}>{value}</p>
+    <p className="text-2xl font-bold">{value}</p>
   </div>
 );
 
 // ChartContainer component
-const ChartContainer: React.FC<{ title: string; children: React.ReactNode }> = ({
-  title,
-  children,
-}) => (
-  <div
-    style={{
-      backgroundColor: "#fff",
-      borderRadius: "8px",
-      padding: "16px",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      height: "500px",
-    }}
-  >
-    <h3
-      style={{
-        marginBottom: "16px",
-        fontSize: "18px",
-        fontWeight: "bold",
-        textAlign: "center",
-      }}
-    >
-      {title}
-    </h3>
-    <div style={{ height: "calc(100% - 40px)" }}>{children}</div>
+const ChartContainer: React.FC<{
+  title: string;
+  children: React.ReactNode;
+}> = ({ title, children }) => (
+  <div className="bg-white rounded-lg p-4 shadow-md h-[500px]">
+    <h3 className="mb-4 text-lg font-bold text-center">{title}</h3>
+    <div className="h-[calc(100%-40px)]">{children}</div>
   </div>
 );
 
 const Dashboard: React.FC = () => {
-  const { loading: expensesLoading, error: expenseError } = useExpenseDashboard();
-  const { summary, loading: summaryLoading, error: summaryError } = useMonthlySummary();
-  const { data: categoryData, loading: categoryLoading, error: categoryError } = useCategoryExpenses();
-  const { data: counters, loading: countersLoading, error: countersError } = useExpenseCounters();
+  const { loading: expensesLoading, error: expenseError } =
+    useExpenseDashboard();
+  const {
+    summary,
+    loading: summaryLoading,
+    error: summaryError,
+  } = useMonthlySummary();
+  const {
+    data: categoryData,
+    loading: categoryLoading,
+    error: categoryError,
+  } = useCategoryExpenses();
+  const {
+    data: counters,
+    loading: countersLoading,
+    error: countersError,
+  } = useExpenseCounters();
 
   const monthlyData = useMemo(() => getMonthlyExpenseData(summary), [summary]);
 
@@ -113,12 +112,12 @@ const Dashboard: React.FC = () => {
   );
 
   if (expensesLoading || summaryLoading || categoryLoading || countersLoading) {
-    return <div style={{ padding: "24px", textAlign: "center" }}>Loading...</div>;
+    return <div className="p-6 text-center">Loading...</div>;
   }
 
   if (expenseError || summaryError || categoryError || countersError) {
     return (
-      <div style={{ padding: "24px", textAlign: "center", color: "red" }}>
+      <div className="p-6 text-center text-red-600">
         {expenseError || summaryError || categoryError || countersError}
       </div>
     );
@@ -130,7 +129,10 @@ const Dashboard: React.FC = () => {
       {
         data: categoryData.map((d) => d.value),
         backgroundColor: COLORS.slice(0, categoryData.length),
-        borderColor: COLORS.map((c) => c.replace("0.7", "1")).slice(0, categoryData.length),
+        borderColor: COLORS.map((c) => c.replace("0.7", "1")).slice(
+          0,
+          categoryData.length
+        ),
         borderWidth: 1,
       },
     ],
@@ -151,17 +153,19 @@ const Dashboard: React.FC = () => {
               typeof labelsRaw === "string"
                 ? [labelsRaw]
                 : Array.isArray(labelsRaw)
-                  ? (labelsRaw as string[])
-                  : [];
-
-
+                ? (labelsRaw as string[])
+                : [];
 
             return labels.map((label: string, i: number) => ({
-              text: `${label} - RS ${(chart.data.datasets[0].data[i] as number).toFixed(2)} (${(
+              text: `${label} - RS ${(
+                chart.data.datasets[0].data[i] as number
+              ).toFixed(2)} (${(
                 ((chart.data.datasets[0].data[i] as number) / pieTotal) *
                 100
               ).toFixed(1)}%)`,
-              fillStyle: (chart.data.datasets[0].backgroundColor as string[])[i],
+              fillStyle: (chart.data.datasets[0].backgroundColor as string[])[
+                i
+              ],
               index: i,
             }));
           },
@@ -225,29 +229,25 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "24px", maxWidth: "1280px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "24px", marginBottom: "24px" }}>Expense Dashboard</h1>
+    <div className="p-6 max-w-[1280px] mx-auto">
+      <h1 className="text-2xl mb-6">Expense Dashboard</h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <Card title="Total" value={`RS ${counters?.total?.toFixed(2) ?? "0.00"}`} />
-        <Card title="This Month" value={`RS ${counters?.monthly?.toFixed(2) ?? "0.00"}`} />
-        <Card title="Today" value={`RS ${counters?.daily?.toFixed(2) ?? "0.00"}`} />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
+        <Card
+          title="Total"
+          value={`RS ${counters?.total?.toFixed(2) ?? "0.00"}`}
+        />
+        <Card
+          title="This Month"
+          value={`RS ${counters?.monthly?.toFixed(2) ?? "0.00"}`}
+        />
+        <Card
+          title="Today"
+          value={`RS ${counters?.daily?.toFixed(2) ?? "0.00"}`}
+        />
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "24px",
-        }}
-      >
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
         <ChartContainer title="Expenses By Category">
           <Pie data={pieData} options={pieOptions} />
         </ChartContainer>

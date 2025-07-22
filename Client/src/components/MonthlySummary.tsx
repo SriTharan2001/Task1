@@ -45,52 +45,11 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
   };
 
   return (
-    <div
-      style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '40px 24px',
-        backgroundColor: '#e0f0ff',
-        borderRadius: '8px',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          marginBottom: '32px',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            color: '#333',
-            margin: 0,
-          }}
-        >
-          📊 Monthly Summary
-        </h1>
+    <div className="max-w-screen-xl mx-auto p-10 bg-blue-100 rounded-lg">
+      <div className="flex flex-col gap-4 mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 m-0">📊 Monthly Summary</h1>
         <button
-          style={{
-            background: 'linear-gradient(to right, #a855f7, #ec4899)',
-            color: '#fff',
-            fontWeight: '600',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseOver={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              'linear-gradient(to right, #9333ea, #db2777)';
-          }}
-          onMouseOut={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              'linear-gradient(to right, #a855f7, #ec4899)';
-          }}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold px-5 py-2 rounded-xl border-none cursor-pointer transition-all duration-300 hover:from-purple-700 hover:to-pink-600"
           onClick={downloadPDF}
         >
           ⬇ Download PDF
@@ -98,37 +57,15 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
       </div>
 
       {loading && (
-        <div
-          style={{
-            textAlign: 'center',
-            color: '#555',
-            padding: '24px',
-          }}
-        >
-          Loading summary...
-        </div>
+        <div className="text-center text-gray-600 py-6">Loading summary...</div>
       )}
 
       {error && !loading && (
-        <div
-          style={{
-            textAlign: 'center',
-            color: '#dc2626',
-            padding: '24px',
-          }}
-        >
+        <div className="text-center text-red-600 py-6">
           {error}
           <button
             onClick={retry}
-            style={{
-              marginLeft: '16px',
-              backgroundColor: '#3b82f6',
-              color: '#fff',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            className="ml-4 bg-blue-500 text-white px-3 py-1.5 rounded-md border-none cursor-pointer"
           >
             Retry
           </button>
@@ -136,49 +73,12 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
       )}
 
       {!loading && !error && (
-        <div
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: '16px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            overflowX: 'auto',
-            border: '1px solid #e5e7eb',
-          }}
-        >
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '0.9rem',
-            }}
-          >
+        <div className="bg-white rounded-2xl shadow-md overflow-x-auto border border-gray-200">
+          <table className="w-full border-collapse text-sm">
             <thead>
-              <tr
-                style={{
-                  background: 'linear-gradient(to right, #3730a3, #1d4ed8)',
-                  color: '#fff',
-                }}
-              >
-                <th
-                  style={{
-                    padding: '16px',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    textAlign: 'left',
-                  }}
-                >
-                  Month
-                </th>
-                <th
-                  style={{
-                    padding: '16px',
-                    textTransform: 'uppercase',
-                    fontWeight: 600,
-                    textAlign: 'left',
-                  }}
-                >
-                  Total (₹)
-                </th>
+              <tr className="bg-gradient-to-r from-indigo-900 to-blue-700 text-white">
+                <th className="px-6 py-4 uppercase font-semibold text-left">Month</th>
+                <th className="px-6 py-4 uppercase font-semibold text-left">Total (₹)</th>
               </tr>
             </thead>
             <tbody>
@@ -186,32 +86,10 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
                 summary.map(({ month, total }) => (
                   <tr
                     key={month}
-                    style={{
-                      transition: 'background-color 0.2s',
-                    }}
-                    onMouseOver={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#f9fafb';
-                    }}
-                    onMouseOut={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '';
-                    }}
+                    className="transition-colors duration-200 hover:bg-gray-50"
                   >
-                    <td
-                      style={{
-                        padding: '16px',
-                        color: '#333',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {month}
-                    </td>
-                    <td
-                      style={{
-                        padding: '16px',
-                        color: '#111',
-                        fontWeight: 600,
-                      }}
-                    >
+                    <td className="px-6 py-4 text-gray-800 font-medium">{month}</td>
+                    <td className="px-6 py-4 text-gray-900 font-semibold">
                       RS {total.toLocaleString('en-IN', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -223,11 +101,7 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({ summary: pr
                 <tr>
                   <td
                     colSpan={2}
-                    style={{
-                      padding: '24px',
-                      textAlign: 'center',
-                      color: '#666',
-                    }}
+                    className="py-6 text-center text-gray-500"
                   >
                     No expenses found.
                   </td>

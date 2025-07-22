@@ -20,16 +20,28 @@ const User: React.FC = () => {
   const [isSubmitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateForm = (data: FormDataType): { [key: string]: string } => {
-    const errors: { [key: string]: string } = {};
-    if (!data.userName.trim()) errors.userName = "Username is required.";
-    if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email))
-      errors.email = "Valid email is required.";
-    if (!data.password.trim() || data.password.length < 6)
-      errors.password = "Password must be at least 6 characters.";
-    if (!data.role) errors.role = "Role is required.";
-    return errors;
-  };
+const validateForm = (data: FormDataType, isEditMode: boolean = false): { [key: string]: string } => {
+  const errors: { [key: string]: string } = {};
+
+  if (!data.userName?.trim()) {
+    errors.userName = "Username is required.";
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!data.email?.trim() || !emailRegex.test(data.email)) {
+    errors.email = "Valid email is required.";
+  }
+
+  if (!isEditMode && (!data.password?.trim() || data.password.length < 6)) {
+    errors.password = "Password must be at least 6 characters.";
+  }
+
+  if (!data.role?.trim()) {
+    errors.role = "Role is required.";
+  }
+
+  return errors;
+};
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -62,35 +74,34 @@ const User: React.FC = () => {
     }
   };
 
- const handleSaveEdit = async () => {
-  const errors = validateForm(editingFormData);
-  if (Object.keys(errors).length > 0 || !editingUserId) {
-    setFormErrors(errors);
-    return;
-  }
-  setSubmitting(true);
-
-  try {
-    if (editingUserId !== null) {
-      const updatedUser = await updateUser(editingFormData, editingUserId);
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === editingUserId ? updatedUser : user
-        )
-      );
-      setEditingUserId(null);
-      setFormErrors({});
-      setError(null);
+  const handleSaveEdit = async () => {
+    const errors = validateForm(editingFormData, true);
+    if (Object.keys(errors).length > 0 || !editingUserId) {
+      setFormErrors(errors);
+      return;
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to update user.";
-    console.error("Error updating user:", error);
-    setError(errorMessage);
-  } finally {
-    setSubmitting(false);
-  }
-};
-
+    setSubmitting(true);
+    try {
+      if (editingUserId !== null) {
+        const updatedUser = await updateUser(editingFormData, editingUserId);
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === editingUserId ? updatedUser : user
+          )
+        );
+        setEditingUserId(null);
+        setEditingFormData({ userName: "", email: "", password: "", role: "Viewer" });
+        setFormErrors({});
+        setError(null);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update user.";
+      console.error("Error updating user:", error);
+      setError(errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleCancelEdit = () => {
     setEditingUserId(null);
@@ -99,18 +110,21 @@ const User: React.FC = () => {
     setError(null);
   };
 
- const handleDelete = async (id: number) => {
-  try {
-    await deleteUser(id.toString());
-    await fetchUsers(); // Refresh list
-    setError(null);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to delete user.";
-    console.error("Error deleting user:", error);
-    setError(errorMessage);
-  }
-};
-
+  const handleDelete = async (id: number) => {
+    try {
+      // Optimistically update the UI
+      setUsers((prev) => prev.filter((user) => user.id !== id));
+      await deleteUser(id.toString());
+      setError(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete user.";
+      console.error("Error deleting user:", error);
+      setError(errorMessage);
+      // Refetch users to restore state if deletion fails
+      const fetchedUsers = await fetchUsers();
+      setUsers(fetchedUsers);
+    }
+  };
 
   const handleOutsideClick = (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -165,103 +179,39 @@ const User: React.FC = () => {
       }}
     >
       {error && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "#fee2e2",
-            color: "#dc2626",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          }}
-        >
-          <strong style={{ marginRight: "8px" }}>Error:</strong> {error}
+        <div className="flex items-center bg-red-100 text-red-600 px-4 py-2 rounded-lg mb-5 text-sm font-medium shadow">
+          <strong className="mr-2">Error:</strong> {error}
           <button
             type="button"
             onClick={() => setError(null)}
-            style={{
-              marginLeft: "auto",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#dc2626",
-              display: "flex",
-              alignItems: "center",
-            }}
+            className="ml-auto bg-transparent border-none text-red-600 hover:text-red-700 focus:outline-none flex items-center"
             title="Dismiss"
             aria-label="Dismiss Error"
           >
             <X size={16} />
           </button>
         </div>
+
       )}
 
-      <h2
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "700",
-          marginBottom: "24px",
-          textAlign: "center",
-          color: "#1f2937",
-        }}
-      >
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         User List
       </h2>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "16px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-          alignItems: "center",
-        }}
-      >
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         <input
           type="text"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           placeholder="Filter by Role"
-          style={{
-            padding: "8px 12px",
-            border: "1px solid #d1d5db",
-            borderRadius: "8px",
-            fontSize: "14px",
-            flex: "1",
-            minWidth: "200px",
-            outline: "none",
-            transition: "border-color 0.2s",
-          }}
-          onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-          onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm flex-1 min-w-[200px] outline-none focus:border-blue-500 transition-colors"
         />
         <button
           onClick={() => {
             setEditingFormData({ userName: "", email: "", password: "", role: "Viewer" });
             setModalOpen(true);
           }}
-          style={{
-            background: "linear-gradient(to right, #3b82f6, #4f46e5)",
-            color: "#fff",
-            padding: "8px 16px",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            border: "none",
-            transition: "all 0.3s",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.background = "linear-gradient(to right, #2563eb, #4338ca)")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.background = "linear-gradient(to right, #3b82f6, #4f46e5)")
-          }
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border-none transition-all shadow-sm hover:from-blue-600 hover:to-indigo-700"
           title="Add User"
           aria-label="Add New User"
         >
@@ -269,260 +219,115 @@ const User: React.FC = () => {
         </button>
       </div>
 
-      {isModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={(event) => handleOutsideClick(event)}
-        >
-          <div
-            ref={modalRef}
-            style={{
-              backgroundColor: "#fff",
-              padding: "24px",
-              borderRadius: "12px",
-              width: "100%",
-              maxWidth: "400px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-              position: "relative",
-            }}
-          >
-            <button
-              onClick={() => setModalOpen(false)}
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "#6b7280",
-              }}
-              title="Close New User Modal"
-              aria-label="Close New User Modal"
-            >
-              <X size={16} />
-            </button>
-            <h2
-              style={{
-                fontSize: "1.25rem",
-                fontWeight: "600",
-                marginBottom: "20px",
-                color: "#1f2937",
-              }}
-            >
-              Add New User
-            </h2>
-            <form style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {["userName", "email", "password"].map((field) => (
-                <div key={field} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#374151",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {field}
-                  </label>
-                  <input
-                    type={field === "password" ? "password" : "text"}
-                    name={field}
-                    value={editingFormData[field as keyof FormDataType]}
-                    onChange={handleInputChange}
-                    placeholder={field}
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "8px",
-                      fontSize: "14px",
-                      outline: "none",
-                      transition: "border-color 0.2s",
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-                    onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                  />
-                  {formErrors[field] && (
-                    <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-                      {formErrors[field]}
-                    </p>
-                  )}
-                </div>
-              ))}
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: "#374151",
-                  }}
-                >
-                  Role
-                </label>
-                <select
-                  name="role"
-                  value={editingFormData.role}
-                  onChange={handleInputChange}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    outline: "none",
-                    transition: "border-color 0.2s",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-                  onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                  aria-label="Role"
-                >
-                  <option value="Viewer">Viewer</option>
-                  <option value="Admin">Admin</option>
-                  <option value="Manager">Manager</option>
-                </select>
-                {formErrors.role && (
-                  <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-                    {formErrors.role}
-                  </p>
-                )}
-              </div>
-              <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  style={{
-                    backgroundColor: "#d1d5db",
-                    color: "#374151",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    border: "none",
-                    transition: "background-color 0.3s",
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#9ca3af")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#d1d5db")}
-                  title="Cancel"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddUser}
-                  disabled={isSubmitting}
-                  style={{
-                    background: "linear-gradient(to right, #3b82f6, #4f46e5)",
-                    color: "#fff",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    cursor: isSubmitting ? "not-allowed" : "pointer",
-                    border: "none",
-                    transition: "all 0.3s",
-                    boxShadow: isSubmitting ? "none" : "0 2px 4px rgba(0,0,0,0.1)",
-                    transform: isSubmitting ? "none" : "scale(1)",
-                  }}
-                  onMouseOver={(e) =>
-                    !isSubmitting &&
-                    (e.currentTarget.style.background = "linear-gradient(to right, #2563eb, #4338ca)")
-                  }
-                  onMouseOut={(e) =>
-                    !isSubmitting &&
-                    (e.currentTarget.style.background = "linear-gradient(to right, #3b82f6, #4f46e5)")
-                  }
-                  title={isSubmitting ? "Adding..." : "Add User"}
-                >
-                  {isSubmitting ? "Adding..." : "Add User"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          borderRadius: "8px",
-          overflow: "hidden",
-          backgroundColor: "#fff",
-        }}
+    {isModalOpen && (
+  <div className=" inset-0 z-50 flex items-center justify-center  backdrop-blur-sm mt-40">
+    <div
+      className="absolute inset-0  bg-opacity- backdrop-blur-sm flex items-center justify-center rounded-xl"
+      onClick={handleOutsideClick}
+    >
+      <div
+        ref={modalRef}
+        className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg relative"
+        onClick={(e) => e.stopPropagation()} // Prevent click from closing when clicking inside modal
       >
+        <button
+          onClick={() => setModalOpen(false)}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          title="Close New User Modal"
+          aria-label="Close New User Modal"
+        >
+          <X size={16} />
+        </button>
+
+        <h2 className="text-xl font-semibold mb-5 text-gray-800">
+          Add New User
+        </h2>
+
+        <form className="flex flex-col gap-4 ">
+          {["userName", "email", "password"].map((field) => (
+            <div key={field} className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700 capitalize">
+                {field}
+              </label>
+              <input
+                type={field === "password" ? "password" : "text"}
+                name={field}
+                value={editingFormData[field as keyof FormDataType] || ""}
+                onChange={handleInputChange}
+                placeholder={field}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500"
+              />
+              {formErrors[field] && (
+                <p className="text-red-600 text-xs mt-1">
+                  {formErrors[field]}
+                </p>
+              )}
+            </div>
+          ))}
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Role</label>
+            <select
+              name="role"
+              value={editingFormData.role || "Viewer"}
+              onChange={handleInputChange}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none transition-colors focus:border-blue-500"
+              aria-label="Role"
+            >
+              <option value="Viewer">Viewer</option>
+              <option value="Admin">Admin</option>
+              <option value="Manager">Manager</option>
+            </select>
+            {formErrors.role && (
+              <p className="text-red-600 text-xs mt-1">{formErrors.role}</p>
+            )}
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-gray-400"
+              title="Cancel"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleAddUser}
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all shadow-sm ${
+                isSubmitting
+                  ? "bg-gradient-to-r from-blue-400 to-indigo-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              }`}
+              title={isSubmitting ? "Adding..." : "Add User"}
+            >
+              {isSubmitting ? "Adding..." : "Add User"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      <table className="w-full border-collapse shadow-md rounded-lg overflow-hidden bg-white">
         <thead>
-          <tr
-            style={{
-              background: "linear-gradient(to right, #1e3a8a, #4f46e5)",
-              color: "#fff",
-              textTransform: "uppercase",
-            }}
-          >
-            <th
-              style={{
-                padding: "16px",
-                textAlign: "left",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Username
-            </th>
-            <th
-              style={{
-                padding: "16px",
-                textAlign: "left",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Email
-            </th>
-            <th
-              style={{
-                padding: "16px",
-                textAlign: "left",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Role
-            </th>
-            <th
-              style={{
-                padding: "16px",
-                textAlign: "left",
-                fontSize: "14px",
-                fontWeight: "600",
-              }}
-            >
-              Actions
-            </th>
+          <tr className="bg-gradient-to-r from-blue-900 to-indigo-700 text-white uppercase">
+            <th className="px-4 py-4 text-left text-sm font-semibold">Username</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold">Email</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold">Role</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
           {filteredUsers.length === 0 ? (
-            <tr>
+            <tr key="no-users">
               <td
                 colSpan={4}
-                style={{
-                  padding: "16px",
-                  textAlign: "center",
-                  color: "#6b7280",
-                  fontSize: "14px",
-                }}
+                className="px-4 py-4 text-center text-sm text-gray-500"
               >
                 No users found
               </td>
@@ -531,80 +336,32 @@ const User: React.FC = () => {
             filteredUsers.map((user) => (
               <tr
                 key={user.id}
-                style={{
-                  transition: "background-color 0.2s",
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f3f4f6")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#fff")}
+                className="hover:bg-gray-100 transition-colors"
               >
                 {editingUserId === user.id ? (
                   <>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap" }}>
-                      <input
-                        type="text"
-                        name="userName"
-                        value={editingFormData.userName}
-                        onChange={handleInputChange}
-                        placeholder="UserName"
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          outline: "none",
-                          width: "100%",
-                          transition: "border-color 0.2s",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                      />
-                      {formErrors.userName && (
-                        <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-                          {formErrors.userName}
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap" }}>
-                      <input
-                        type="email"
-                        name="email"
-                        value={editingFormData.email}
-                        onChange={handleInputChange}
-                        placeholder="email"
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          outline: "none",
-                          width: "100%",
-                          transition: "border-color 0.2s",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
-                      />
-                      {formErrors.email && (
-                        <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-                          {formErrors.email}
-                        </p>
-                      )}
-                    </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap" }}>
+                    {(["userName", "email", "password"] as (keyof FormDataType)[]).map((field) => (
+                      <td key={field} className="px-4 py-4 whitespace-nowrap">
+                        <input
+                          type={field === "password" ? "password" : "text"}
+                          name={field}
+                          value={editingFormData[field] || ""}
+                          onChange={handleInputChange}
+                          placeholder={field === "password" ? "Password (optional)" : field}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500"
+                        />
+                        {formErrors[field] && (
+                          <p className="text-red-600 text-xs mt-1">{formErrors[field]}</p>
+                        )}
+                      </td>
+                    ))}
+
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <select
                         name="role"
-                        value={editingFormData.role}
+                        value={editingFormData.role || "Viewer"}
                         onChange={handleInputChange}
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          fontSize: "14px",
-                          outline: "none",
-                          width: "100%",
-                          transition: "border-color 0.2s",
-                        }}
-                        onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-                        onBlur={(e) => (e.target.style.borderColor = "#d1d5db")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500"
                         aria-label="Role"
                       >
                         <option value="Viewer">Viewer</option>
@@ -612,39 +369,20 @@ const User: React.FC = () => {
                         <option value="Manager">Manager</option>
                       </select>
                       {formErrors.role && (
-                        <p style={{ color: "#dc2626", fontSize: "12px", marginTop: "4px" }}>
-                          {formErrors.role}
-                        </p>
+                        <p className="text-red-600 text-xs mt-1">{formErrors.role}</p>
                       )}
                     </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap" }}>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <button
                         onClick={handleSaveEdit}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#3b82f6",
-                          marginRight: "8px",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.color = "#2563eb")}
-                        onMouseOut={(e) => (e.currentTarget.style.color = "#3b82f6")}
+                        className="text-blue-500 hover:text-blue-700 mr-2 transition-colors"
                         title="Save"
                       >
                         <Save size={20} />
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#6b7280",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.color = "#4b5563")}
-                        onMouseOut={(e) => (e.currentTarget.style.color = "#6b7280")}
+                        className="text-gray-500 hover:text-gray-700 transition-colors"
                         title="Cancel"
                       >
                         <X size={20} />
@@ -653,31 +391,16 @@ const User: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap", color: "#374151" }}>
-                      {user.userName}
-                    </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap", color: "#374151" }}>
-                      {user.email}
-                    </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap", color: "#374151" }}>
-                      {user.role}
-                    </td>
-                    <td style={{ padding: "16px", whiteSpace: "nowrap" }}>
+                    <td className="px-4 py-4 whitespace-nowrap text-gray-700">{user.userName}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-gray-700">{user.email}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-gray-700">{user.role}</td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <button
                         onClick={() => {
                           setEditingUserId(user.id);
-                          setEditingFormData(user);
+                          setEditingFormData({ ...user, password: "" });
                         }}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#3b82f6",
-                          marginRight: "8px",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.color = "#2563eb")}
-                        onMouseOut={(e) => (e.currentTarget.style.color = "#3b82f6")}
+                        className="text-blue-500 hover:text-blue-700 mr-2 transition-colors"
                         title="Edit"
                         aria-label="Edit User"
                       >
@@ -685,15 +408,7 @@ const User: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleDelete(user.id)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "#dc2626",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.color = "#b91c1c")}
-                        onMouseOut={(e) => (e.currentTarget.style.color = "#dc2626")}
+                        className="text-red-600 hover:text-red-800 transition-colors"
                         title="Delete"
                         aria-label="Delete User"
                       >
@@ -707,6 +422,7 @@ const User: React.FC = () => {
           )}
         </tbody>
       </table>
+
     </div>
   );
 };

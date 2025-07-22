@@ -19,3 +19,4 @@ addMiddleware('auth', (nextValue, prevValue, storeName) => {
   }
   return nextValue;
 });
+

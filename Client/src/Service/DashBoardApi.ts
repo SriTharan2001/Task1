@@ -6,7 +6,15 @@ import { BASE_URL } from "../config";
 import useStore from "pulsy";
 // import type { LoginResponse } from "./useLogin";
 // Update the import path below if 'useLogin' is located elsewhere, e.g.:
-import type { LoginResponse } from "../Hooks/useLogin";
+// import the correct type from useLogin, or define LoginResponse here if needed
+// import type { LoginResponse } from "../Hooks/useLogin";
+type LoginResponse = {
+  user?: {
+    objectId?: string;
+    // add other properties as needed
+  };
+  // add other properties as needed
+};
 import { io } from 'socket.io-client';
 
 const useExpenseDashboard = () => {

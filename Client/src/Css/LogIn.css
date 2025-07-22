@@ -1,4 +1,4 @@
-@keyframes fadeIn {
+/* @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -288,4 +288,4 @@
   opacity: 0.8;
   transform: translateY(-1px);
   text-decoration: underline;
-}
+} */

@@ -1,21 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import useExpenseForm from "../Hooks/useExpenseForm";
-import "../Css/ExpenseForm.css";
 
 const ExpenseFormDesign: React.FC = () => {
-  // இதை வேண்டாம் என்றால் நீக்கலாம்:
-  // const navigate = useNavigate();
-
-  const [userId, setUserId] = React.useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
-    } else {
-      // userId இல்லையென்றாலும், form காட்டவேண்டும் என சொன்னீர்கள்.
-      setUserId(""); 
-    }
+    setUserId(storedUserId || "");
   }, []);
 
   const {
@@ -28,51 +19,19 @@ const ExpenseFormDesign: React.FC = () => {
   } = useExpenseForm(userId);
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: "28rem",
-        margin: "0 auto",
-        padding: "1.5rem",
-        backgroundColor: "white",
-        borderRadius: "0.75rem",
-        boxShadow: "0 10px 15px rgba(0,0,0,0.1)"
-      }}
-    >
-      <h2
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "800",
-          letterSpacing: "0.05em",
-          color: "#2d3748",
-          marginBottom: "1.5rem"
-        }}
-      >
+    <div className="w-full max-w-md mx-auto mt-10 bg-gray-200 p-6 rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold tracking-wide text-gray-800 mb-6">
         Add Expense
       </h2>
 
       {successMessage && (
-        <div
-          style={{
-            marginBottom: "1rem",
-            color: "green",
-            fontWeight: "600"
-          }}
-        >
-          {successMessage}
-        </div>
+        <div className="mb-4 text-green-600 font-semibold">{successMessage}</div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            style={{
-              display: "block",
-              color: "#4a5568",
-              marginBottom: "0.5rem",
-              fontWeight: "600"
-            }}
-          >
+      <form onSubmit={handleSubmit} className="space-y-5 w-full">
+        {/* Category Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
             Category
           </label>
           <input
@@ -82,36 +41,16 @@ const ExpenseFormDesign: React.FC = () => {
             onChange={handleChange}
             placeholder="Enter category"
             required
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              border: "1px solid #ccc",
-              borderRadius: "0.75rem",
-              outline: "none"
-            }}
-            onFocus={(e) => {
-              e.target.style.boxShadow = "0 0 0 2px #3b82f6";
-            }}
-            onBlur={(e) => {
-              e.target.style.boxShadow = "none";
-            }}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
           {categoryError && (
-            <p style={{ color: "#f56565", fontSize: "0.875rem", marginTop: "0.25rem" }}>
-              {categoryError}
-            </p>
+            <p className="text-sm text-red-500 mt-1">{categoryError}</p>
           )}
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            style={{
-              display: "block",
-              color: "#4a5568",
-              marginBottom: "0.5rem",
-              fontWeight: "600"
-            }}
-          >
+        {/* Amount Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
             Amount (RS)
           </label>
           <input
@@ -123,31 +62,13 @@ const ExpenseFormDesign: React.FC = () => {
             step="0.01"
             min="0.01"
             required
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              border: "1px solid #ccc",
-              borderRadius: "0.75rem",
-              outline: "none"
-            }}
-            onFocus={(e) => {
-              e.target.style.boxShadow = "0 0 0 2px #3b82f6";
-            }}
-            onBlur={(e) => {
-              e.target.style.boxShadow = "none";
-            }}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label
-            style={{
-              display: "block",
-              color: "#4a5568",
-              marginBottom: "0.5rem",
-              fontWeight: "600"
-            }}
-          >
+        {/* Date Field */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
             Date
           </label>
           <input
@@ -156,57 +77,23 @@ const ExpenseFormDesign: React.FC = () => {
             value={formData.date}
             onChange={handleChange}
             required
-            className="expense-form-input"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             title="Select date"
-            placeholder="Select date"
           />
         </div>
 
-        <div style={{ display: "flex", gap: "1rem" }}>
+        {/* Buttons */}
+        <div className="flex gap-4">
           <button
             type="submit"
-            style={{
-              background: "linear-gradient(to right, #3b82f6, #6366f1)",
-              color: "white",
-              fontWeight: "600",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.3s ease"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "linear-gradient(to right, #2563eb, #4f46e5)";
-              e.currentTarget.style.transform = "scale(1.05)";
-              e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.2)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "linear-gradient(to right, #3b82f6, #6366f1)";
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
+            className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold py-2 px-4 rounded-lg transition hover:from-blue-600 hover:to-indigo-600 hover:scale-105 shadow-sm"
           >
             Add Expense
           </button>
           <button
             type="reset"
             onClick={resetForm}
-            style={{
-              backgroundColor: "#e2e8f0",
-              color: "#2d3748",
-              fontWeight: "600",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-              border: "none",
-              cursor: "pointer",
-              transition: "all 0.3s ease"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#cbd5e0";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "#e2e8f0";
-            }}
+            className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg transition hover:bg-gray-300"
           >
             Cancel
           </button>

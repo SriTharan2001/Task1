@@ -1,7 +1,19 @@
-// Only declare these ONCE:
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/User");
+const path = require("path");
+const fs = require("fs");
+const mongoose = require("mongoose");
+const Grid = require("gridfs-stream");
+const { getGFS } = require("../config/db"); // ✅ gfs access
+
+let gfs;
+const conn = mongoose.connection;
+
+conn.once("open", () => {
+  gfs = Grid(conn.db, mongoose.mongo);
+  gfs.collection("uploads");
+});
 
 // Register
 exports.register = async (req, res) => {
@@ -22,33 +34,40 @@ exports.register = async (req, res) => {
 };
 
 // Login
+// controllers/authController.js (or similar)
+
+ // Adjust the path as needed
+
 exports.login = async (req, res) => {
   const { email, password, role } = req.body;
+
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ success: false, message: "Invalid credentials" });
+
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
 
-    if (user.role.toLowerCase() !== role.toLowerCase()) {
-      return res.status(401).json({ success: false, message: "Unauthorized role" });
-    }
+    if (role && user.role !== role)
+      return res.status(403).json({ success: false, message: "Role mismatch" });
 
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    res.json({
+    res.status(200).json({
       success: true,
+      message: "Login successful",
       token,
       user: {
         userId: user._id,
         userName: user.userName,
         email: user.email,
         role: user.role,
+        picture: user.picture || null, // ✅ send profile pic
       },
     });
   } catch (err) {
@@ -56,6 +75,14 @@ exports.login = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// ✅ Serve profile image
+exports.getProfileImage = (req, res) => {
+  const filename = req.params.filename;
+  const imagePath = path.join(__dirname, "../uploads", filename);
+  res.sendFile(imagePath);
+};
+
 
 // Request Password Reset
 exports.requestPasswordReset = async (req, res) => {
@@ -96,6 +123,7 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 // Delete user by ID
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
@@ -108,4 +136,31 @@ exports.deleteUser = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+// Update profile image
+exports.updateProfileImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+
+    user.picture = req.file.filename;
+    await user.save();
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Image upload failed" });
+  }
+};
+
+// Get profile image
+exports.getProfileImage = async (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, "../uploads", filename);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "Image not found" });
+  }
+  res.sendFile(filePath);
 };

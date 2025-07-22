@@ -2,7 +2,7 @@
 export function getAllowedRoutes(role?: string): string[] {
   switch (role) {
     case "Viewer":
-      return ["/dashboard", "/monthly-summary"];
+      return ["/dashboard", "/monthly-summary", ];
     case "Admin":
       return ["/dashboard", "/add-expense", "/expenses", "/monthly-summary" ];
     case "Manager":

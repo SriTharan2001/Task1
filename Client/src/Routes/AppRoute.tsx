@@ -8,7 +8,6 @@ import LoginForm from '../components/LogIn';
 import MainLayout from '../Layout/MainLayout';
 import User from '../components/User';
 import ProtectedRoute from './ProtectedRoute';
-import Profile from '../components/profile'; // Fixed casing
 
 const AppRoutes = () => (
   <Routes>
@@ -56,14 +55,7 @@ const AppRoutes = () => (
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
+     
     </Route>
   </Routes>
 );
