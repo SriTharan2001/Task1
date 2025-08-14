@@ -23,10 +23,10 @@ const useExpenseForm = (userId: string) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "amount" ? Number(value) : value,
+      userId: userId, // Ensure userId is always current
+      [name]: value,
     }));
   };
 

@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Edit, Trash2, Save, X } from "lucide-react";
 import DataTable from "react-data-table-component";
 import type { TableColumn } from "react-data-table-component";
-import { expenseService } from "../Service/expenseService";
-import { fetchExpenses } from "../Service/expenseApi";
 import type { Expense } from "../Types/Expense";
-import axios from "axios";
+import api from "../utils/api";  // use your axios instance with interceptor
 
 const ExpenseListDesign: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -17,25 +15,38 @@ const ExpenseListDesign: React.FC = () => {
   const [editAmount, setEditAmount] = useState("");
   const [editDate, setEditDate] = useState("");
 
-  useEffect(() => {
-    const fetchExpensesData = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-        if (!userId) {
-          setError("User ID not found. Please login.");
-          return;
-        }
-        const data = await fetchExpenses(userId);
-        if (!Array.isArray(data)) throw new Error("API did not return an array.");
-        setExpenses(data);
-        setError(null);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to fetch expenses.";
-        setError(errorMessage);
+
+useEffect(() => {
+  const fetchExpensesData = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        setError("User ID not found. Please login.");
+        return;
       }
-    };
-    fetchExpensesData();
-  }, []);
+      const response = await api.get(`/api/expenses/fetch/${userId}`);
+      const data = response.data;
+
+      if (Array.isArray(data)) {
+        setExpenses(data);
+      } else {
+        setExpenses([]); // fallback
+        console.error("Expected array but got:", data);
+        setError("Unexpected response from server.");
+      }
+    } catch (err: unknown) {
+      console.error("Error fetching expenses:", err);
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const response = (err as { response?: { data?: { message?: string } } }).response;
+        setError(response?.data?.message || "Failed to fetch expenses.");
+      } else {
+        setError("Failed to fetch expenses.");
+      }
+    }
+  };
+
+  fetchExpensesData();
+}, []);
 
   const filteredExpenses = expenses.filter((expense) => {
     const expenseDate = expense.date ? new Date(expense.date).toISOString().split("T")[0] : "";
@@ -77,11 +88,11 @@ const ExpenseListDesign: React.FC = () => {
         amount: parseFloat(editAmount),
         date: editDate,
       };
-      await axios.put(`http://localhost:5000/api/expenses/${id}`, payload);
+      await api.put(`/api/expenses/${id}`, payload);
       setExpenses((prev) => prev.map((exp) => (exp._id === id ? { ...exp, ...payload } : exp)));
       cancelEdit();
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Failed to update expense.");
     }
   };
@@ -89,8 +100,7 @@ const ExpenseListDesign: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this expense?")) return;
     try {
-      const userId = localStorage.getItem("userId") || "";
-      await expenseService.deleteExpense(id, userId);
+      await api.delete(`/api/expenses/${id}`);
       setExpenses((prev) => prev.filter((exp) => exp._id !== id));
       setError(null);
     } catch {
@@ -172,7 +182,7 @@ const ExpenseListDesign: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-screen-xl mx-auto p-6">
+    <div className="font-sans max-w-screen-xl mx-auto p-6">
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded relative mb-4">
           <strong className="font-bold mr-2">Error:</strong>
@@ -204,14 +214,14 @@ const ExpenseListDesign: React.FC = () => {
         <div className="flex-1 min-w-[200px]">
           <label className="block mb-1 font-medium text-gray-700">Filter by Date</label>
           <input
-          aria-label="Filter by date"
+            aria-label="Filter by date"
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className="w-full p-2 border rounded"
           />
         </div>
-        <button onClick={resetFilters} className="bg-blue-600 text-white px-4 py-2 rounded font-medium hover:bg-blue-700">
+        <button onClick={resetFilters} className="bg-yellow-500 h-11 text-white px-4 py-2 mt-7 rounded font-medium hover:bg-yellow-600">
           Reset
         </button>
       </div>
@@ -224,7 +234,7 @@ const ExpenseListDesign: React.FC = () => {
         paginationRowsPerPageOptions={[10, 25, 50]}
         noDataComponent="No expenses found."
         responsive
-        className="bg-gray-200"
+        className="bg-gray-200 font-sans"
       />
     </div>
   );

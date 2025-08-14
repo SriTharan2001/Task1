@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaEdit } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../utils/api"; // ✅ Using this instance instead of axios
 
 interface User {
   userName?: string;
@@ -12,8 +12,13 @@ interface User {
 interface ProfileProps {
   user?: User | null;
   onClose?: () => void;
-  onLogout: () => void;
 }
+interface ProfileProps {
+  user?: User | null;
+  onClose?: () => void;
+  onLogout?: () => void; // ✅ Add this line
+}
+
 
 interface ProfileImageUploadResponse {
   user: {
@@ -23,7 +28,21 @@ interface ProfileImageUploadResponse {
 
 const LOCAL_STORAGE_KEY = "profileImage";
 
-const Profile: React.FC<ProfileProps> = ({ user, onClose, onLogout }) => {
+// ✅ Exported logout function
+export const logout = async () => {
+  try {
+    await api.post("/api/auth/logout");
+  } catch (err) {
+    
+    // ignore or log error, e.g. console.warn("Logout API failed", err);
+  }
+  localStorage.removeItem("token");
+    localStorage.clear();        // Clear token and session info
+
+  window.location.href = "/login";
+};
+
+const Profile: React.FC<ProfileProps> = ({ user, onClose }) => {
   const navigate = useNavigate();
   const [profileImage, setProfileImage] = useState<string>("");
 
@@ -47,18 +66,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onClose, onLogout }) => {
     if (!file) return;
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Please log in first");
-
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await axios.put<ProfileImageUploadResponse>(
-        "http://localhost:5000/api/auth/profile/image",
+      const response = await api.put<ProfileImageUploadResponse>(
+        "/api/auth/profile/image",
         formData,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         }
@@ -84,17 +99,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onClose, onLogout }) => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    onLogout();
-    navigate("/login");
-  };
-
   if (!user) return null;
 
   return (
-    <div className="bg-gradient-to-br from-purple-700 via-indigo-600 to-blue-600 rounded-xl shadow-xl w-80 p-6 relative text-center text-white">
+    <div
+      style={{ backgroundColor: "#14213D" }}
+      className="rounded-xl shadow-xl w-80 p-6 relative text-center text-white"
+    >
       {onClose && (
         <button
           className="absolute top-2 right-2 text-gray-100 hover:text-black"
@@ -137,15 +148,13 @@ const Profile: React.FC<ProfileProps> = ({ user, onClose, onLogout }) => {
       </div>
 
       <h2 className="text-xl font-semibold mb-2">
-        Hi, {user.userName || "User"}!
+        {user.userName || "User"}
       </h2>
-      <p className="text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-md mb-4 cursor-pointer transition-all">
-        Manage your Account
-      </p>
-      <div className="flex space-x-2 mt-2">
+
+      <div className="flex space-x-2 mt-4">
         <button
-          className="flex-1 bg-white text-red-600 border border-red-400 rounded-md py-2 text-sm hover:bg-red-50 transition-all"
-          onClick={handleLogout}
+          className="flex-1  bg-white text-black border-red-400 rounded-md py-2 text-sm hover:bg-red-50 transition-all"
+          onClick={logout}
         >
           Sign out
         </button>

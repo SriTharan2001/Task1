@@ -19,8 +19,8 @@ const ExpenseFormDesign: React.FC = () => {
   } = useExpenseForm(userId);
 
   return (
-    <div className="w-full max-w-md mx-auto mt-10 bg-gray-200 p-6 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold tracking-wide text-gray-800 mb-6">
+    <div className="w-full font-sans max-w-md mx-auto mt-10 bg-gray-200 p-6 rounded-xl shadow-lg">
+      <h2 className="text-2xl font-bold tracking-wide text-gray-800 mb-6" data-testid="form-title">
         Add Expense
       </h2>
 
@@ -28,13 +28,14 @@ const ExpenseFormDesign: React.FC = () => {
         <div className="mb-4 text-green-600 font-semibold">{successMessage}</div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 w-full">
+      <form onSubmit={handleSubmit} className="space-y-5 w-full" data-testid="expense-form">
         {/* Category Field */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
+          <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-1">
             Category
           </label>
           <input
+            id="category"
             type="text"
             name="category"
             value={formData.category}
@@ -50,10 +51,11 @@ const ExpenseFormDesign: React.FC = () => {
 
         {/* Amount Field */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
+          <label htmlFor="amount" className="block text-sm font-semibold text-gray-700 mb-1">
             Amount (RS)
           </label>
           <input
+            id="amount"
             type="number"
             name="amount"
             value={formData.amount}
@@ -68,10 +70,11 @@ const ExpenseFormDesign: React.FC = () => {
 
         {/* Date Field */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
+          <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-1">
             Date
           </label>
           <input
+            id="date"
             type="date"
             name="date"
             value={formData.date}

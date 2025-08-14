@@ -1,6 +1,7 @@
 // src/Layout/Navbar.tsx
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Menu } from "lucide-react";
 
 interface User {
   userName?: string;
@@ -11,34 +12,55 @@ interface User {
 interface NavbarProps {
   user?: User | null;
   onProfileClick?: () => void;
+  onMenuClick?: () => void; // <-- added for mobile toggle
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, onProfileClick }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, onProfileClick, onMenuClick }) => {
   const navigate = useNavigate();
 
   const handleProfileClick = () => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
     } else {
-      onProfileClick?.(); // trigger open from MainLayout
+      onProfileClick?.();
     }
   };
 
   return (
-    <nav className="bg-blue-950 h-20 text-white px-6 flex justify-between items-center shadow-lg">
-      <div className="flex-1 flex justify-center">
-        <h2 className="text-2xl font-extrabold tracking-tight">Expense Data</h2>
+    <nav
+      style={{ backgroundColor: "#14213D" }}
+      className="h-20 text-white px-4 md:px-6 flex justify-between items-center shadow-lg"
+    >
+      {/* Mobile Hamburger */}
+      <div className="md:hidden">
+        <button
+          aria-label="Menu"
+
+          onClick={onMenuClick}
+          className="focus:outline-none"
+        >
+          <Menu size={28} />
+        </button>
       </div>
-      <div className="flex items-center gap-4 mr-6">
+
+      {/* App Title */}
+      <div className="flex-1 flex justify-center md:justify-center">
+        <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">Expense Data</h2>
+      </div>
+
+      {/* Profile / Login */}
+      <div className="flex items-center gap-4 mr-2 md:mr-6">
         {user ? (
           <>
-            <span className="text-base font-medium">Welcome, {user.userName || 'User'}</span>
+            <span className="text-sm md:text-base font-medium hidden sm:inline">
+              Welcome, {user.userName || "User"}
+            </span>
             <div
               className="w-10 h-10 rounded-full bg-white text-indigo-900 flex items-center justify-center font-semibold text-base cursor-pointer hover:bg-gray-100 transition"
-              title={user.userName || 'User'}
+              title={user.userName || "User"}
               onClick={handleProfileClick}
             >
-              {(user.userName?.charAt(0) || 'U').toUpperCase()}
+              {(user.userName?.charAt(0) || "U").toUpperCase()}
             </div>
           </>
         ) : (
@@ -47,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onProfileClick }) => {
             title="Login"
             onClick={handleProfileClick}
           >
-            <span className="text-base font-medium">Login</span>
+            <span className="text-sm md:text-base">Login</span>
           </div>
         )}
       </div>

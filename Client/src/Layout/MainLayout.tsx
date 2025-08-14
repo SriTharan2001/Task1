@@ -1,61 +1,106 @@
 // src/Layout/MainLayout.tsx
-
-import { useState } from 'react';
-import { getStoreValue, setStoreValue } from 'pulsy';
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from './Slidebar';
-import Navbar from './Navbar';
-import Profile from '../components/profile';
-import type { AuthStore } from '../Types/AuthStore';
+import { useEffect, useState } from "react";
+import { getStoreValue, setStoreValue } from "pulsy";
+import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import Sidebar from "./Slidebar";
+import Navbar from "./Navbar";
+import Profile from "../components/profile";
+import type { AuthStore } from "../Types/AuthStore";
 
 const MainLayout: React.FC = () => {
-  const authStore = getStoreValue<AuthStore>('auth');
+  const authStore = getStoreValue<AuthStore>("auth");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleLogout = () => {
-    // Reset both user and token
-    setStoreValue<AuthStore>('auth', {
-      user: null,
-      token: null,
-    });
-
-    console.log('Logged out');
-
-    // Redirect to login page
-    navigate('/login');
+    setStoreValue<AuthStore>("auth", { user: null, token: null });
+    navigate("/login");
   };
 
-  if (!authStore?.user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!authStore?.user) return <Navigate to="/login" replace />;
+
+  const sidebarWidth = collapsed && !isMobile ? "w-16" : "w-64";
+  const contentMarginLeft =
+    isMobile || sidebarOpen ? "ml-0" : collapsed ? "ml-16" : "ml-64";
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 relative">
-      <Sidebar />
+    <div className="w-screen overflow-hidden font-sans bg-gray-100 text-gray-900 relative">
+      {/* Sidebar */}
+      {(!isMobile || sidebarOpen) && (
+        <aside
+          className={`fixed top-0 left-0 h-screen z-50 shadow-md transition-all duration-300 ${
+            isMobile ? "w-[64px]" : sidebarWidth
+          } ${isMobile ? "bg-[#14213D]" : ""}`}
+        >
+          <Sidebar
+            collapsed={isMobile ? true : collapsed}
+            setCollapsed={setCollapsed}
+          />
+        </aside>
+      )}
 
-      <div className="flex flex-col flex-1">
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Navbar */}
+      <header
+        className={`fixed top-0 right-0 h-20 z-40 w-full transition-all duration-300 ${
+          isMobile ? "" : contentMarginLeft
+        }`}
+      >
         <Navbar
           user={authStore.user}
           onProfileClick={() => setIsProfileOpen(true)}
+          onMenuClick={() => {
+            if (isMobile) setSidebarOpen((prev) => !prev);
+          }}
         />
+      </header>
 
-        {isProfileOpen && (
-          <div className="absolute top-[90px] right-6 z-50">
-            <Profile
-              user={authStore.user}
-              onClose={() => setIsProfileOpen(false)}
-              onLogout={handleLogout}
-            />
-          </div>
-        )}
+      {/* Profile Dropdown */}
+      {isProfileOpen && (
+        <div
+          className="fixed z-50"
+          style={{
+            top: "5rem",
+            right: collapsed ? "1rem" : "1.5rem",
+          }}
+        >
+          <Profile
+            user={authStore.user}
+            onClose={() => setIsProfileOpen(false)}
+            onLogout={handleLogout}
+          />
+        </div>
+      )}
 
-        <main className="flex-1 p-6 md:p-8 bg-white rounded-xl shadow-lg m-4 md:m-6 transition-all hover:shadow-xl">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      {/* Main Content */}
+      <main
+        className={`transition-all duration-300 pt-20 min-h-screen pb-10 overflow-y-auto p-4 ${
+          isMobile ? "ml-0" : contentMarginLeft
+        }`}
+      >
+        <div className="max-w-7xl mx-auto bg-white p-6 rounded-xl shadow-md">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 };

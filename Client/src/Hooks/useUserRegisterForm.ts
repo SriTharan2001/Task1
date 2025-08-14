@@ -15,7 +15,7 @@ export interface UserWithId extends FormDataType {
   id: number;
 }
 
-// Define expected API response structures
+// Define expected API response structure
 interface ApiResponse {
   message?: string;
   error?: string;
@@ -57,6 +57,7 @@ const useUserRegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Basic validation
     if (!formData.userName || !formData.email || !formData.password) {
       setErrorMessage("Please fill in all fields.");
       return;
@@ -103,10 +104,7 @@ const useUserRegisterForm = () => {
   const fetchUsers = useCallback(async (): Promise<UserWithId[]> => {
     try {
       setIsLoading(true);
-      const url = `${BASE_URL}/api/auth/users`;
-      console.log("Trying to fetch from:", url);
-
-      const response = await fetch(url, {
+      const response = await fetch(`${BASE_URL}/api/auth/users`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -118,7 +116,7 @@ const useUserRegisterForm = () => {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: UserWithId[] = await response.json();
       return data;
     } catch (error) {
       console.error("Full fetch error details:", error);
@@ -146,13 +144,17 @@ const useUserRegisterForm = () => {
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
+      const data: ApiResponse | UserWithId = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `Failed to add user: ${response.status}`);
+        throw new Error(
+          (data as ApiResponse).error ||
+            `Failed to add user: ${response.status}`
+        );
       }
 
       setSuccessMessage("User added successfully!");
+      setErrorMessage("");
       return data as UserWithId;
     } catch (error) {
       console.error("Add User Error:", error);
@@ -181,15 +183,17 @@ const useUserRegisterForm = () => {
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
+      const data: ApiResponse | UserWithId = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error || `Failed to update user: ${response.status}`
+          (data as ApiResponse).error ||
+            `Failed to update user: ${response.status}`
         );
       }
 
       setSuccessMessage("User updated successfully!");
+      setErrorMessage("");
       return data as UserWithId;
     } catch (error) {
       console.error("Update User Error:", error);
@@ -214,11 +218,12 @@ const useUserRegisterForm = () => {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `Failed to delete user: ${response.status}`);
+        const data: ApiResponse = await response.json();
+        throw new Error(data.error || `Failed to delete user`);
       }
 
       setSuccessMessage("User deleted successfully!");
+      setErrorMessage("");
     } catch (error) {
       console.error("Delete User Error:", error);
       setErrorMessage(
@@ -236,7 +241,7 @@ const useUserRegisterForm = () => {
     handleSubmit,
     addUser,
     successMessage,
-    errorMessage,
+    errorMessage, // ✅ RETURNED HERE
     isLoading,
     resetForm,
     fetchUsers,

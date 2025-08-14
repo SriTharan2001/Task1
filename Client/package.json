@@ -3,13 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "start": "react-scripts start",
-    "build": "vite build",
-    "test": "react-scripts test",
-    "preview": "vite preview"
-  },
+ "scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "test": "vitest",
+  "test:ui": "vitest --ui",
+  "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+}
+,
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "@types/react-datepicker": "^6.2.0",
@@ -30,19 +32,29 @@
     "react-datepicker": "^8.4.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.6.3",
+    "react-router-dom": "^7.7.1",
+    "react-scripts": "^0.0.0",
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1",
     "styled-components": "^6.1.19",
     "tailwindcss": "^4.1.11",
     "utility-types": "^3.11.0",
     "uuid": "^11.1.0",
-    "websocket": "^1.0.35"
+    "websocket": "^1.0.35",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-typescript": "^7.27.1",
     "@eslint/js": "^9.25.0",
+    "@jest/globals": "^30.0.5",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/axios": "^0.9.36",
     "@types/chart.js": "^2.9.41",
+    "@types/jest": "^30.0.0",
     "@types/jspdf": "^1.3.3",
     "@types/node": "^24.0.3",
     "@types/react": "^19.1.8",
@@ -50,16 +62,22 @@
     "@types/react-dom": "^19.1.6",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-toastify": "^4.0.2",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
+    "@types/testing-library__react": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "babel-jest": "^30.0.5",
     "eslint": "^8.57.1",
-    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "typescript": "~5.8.3",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
+    "typescript": "^4.9.5",
     "typescript-eslint": "^7.3.1",
-    "vite": "^5.0.0"
+    "vite": "^7.0.6",
+    "vitest": "^3.2.4"
   }
 }

@@ -2,18 +2,17 @@
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.test.json" }
   ],
   "compilerOptions": {
-    "strict": true,
-    "verbatimModuleSyntax": true,
-    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "target": "ES6",
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "target": "esnext",
-      "lib": ["es2017", "dom"],
-    "jsx": "react-jsx"
+    "strict": true,
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals"]
   }
-  
 }

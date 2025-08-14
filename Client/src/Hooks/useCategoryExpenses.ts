@@ -1,6 +1,6 @@
 // src/Hooks/useCategoryExpenses.ts
 import { useEffect, useState } from "react";
-import { BASE_URL } from "../config";
+import api from "../utils/api"; // ✅ Axios instance with token
 
 interface CategoryData {
   name: string;
@@ -16,11 +16,10 @@ const useCategoryExpenses = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/expenses/category-wise`);
-        if (!response.ok) throw new Error("Failed to fetch category data");
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
+        const response = await api.get<CategoryData[]>("/api/expenses/category-wise"); // ✅ token attached automatically
+        setData(response.data);
+      } catch (err: unknown) {
+        console.error("❌ Error fetching category-wise expenses:", err);
         if (err instanceof Error) {
           setError(err.message);
         } else {

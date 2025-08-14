@@ -1,4 +1,6 @@
+// src/Hooks/useMonthlySummary.ts
 import { useEffect, useState } from "react";
+import api from "../utils/api";
 
 export type SummaryData = {
   month: string;
@@ -15,9 +17,8 @@ const useMonthlySummary = () => {
     setError(null);
 
     try {
-const res = await fetch("http://localhost:5000/api/summary/summary");
-      const data = await res.json();
-      setSummary(data);
+      const res = await api.get<SummaryData[]>("/api/summary/summary");
+      setSummary(res.data);
     } catch (err) {
       setError("Failed to load summary");
     } finally {

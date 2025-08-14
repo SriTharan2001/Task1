@@ -11,7 +11,7 @@ import ProtectedRoute from './ProtectedRoute';
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="/dashboard" />} />
+    <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="/login" element={<LoginForm />} />
 
     <Route element={<MainLayout />}>

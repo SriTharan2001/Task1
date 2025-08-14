@@ -1,27 +1,30 @@
+// Service/expenseApi.ts (replace fetch with axios 'api')
+
+import api from "../utils/api";
+
 export const createExpense = async (expense: { category: string; amount: number; date: string, userId: string }) => {
-  const response = await fetch("http://localhost:5000/api/expenses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(expense),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to create expense");
+  try {
+    const response = await api.post("/api/expenses", expense);
+    return response.data;
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      throw new Error(err.response?.data?.message || "Failed to create expense");
+    }
+    throw new Error("Failed to create expense");
   }
-
-  return response.json();
 };
 
+// Add your fetchExpenses function here, properly structured
 export const fetchExpenses = async (userId: string) => {
-  const response = await fetch(`http://localhost:5000/api/expenses/fetch/${userId}`);
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to fetch expenses");
+  try {
+    const response = await api.get(`/api/expenses?userId=${userId}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "response" in error) {
+      const err = error as { response?: { data?: { message?: string } } };
+      throw new Error(err.response?.data?.message || "Failed to fetch expenses");
+    }
+    throw new Error("Failed to fetch expenses");
   }
-
-  return response.json();
-};
+}

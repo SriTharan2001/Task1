@@ -1,18 +1,23 @@
 // src/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { getStoreValue } from 'pulsy';
-import type { AuthStore } from '../Types/AuthStore';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { getStoreValue } from "pulsy";
+import type { AuthStore } from "../Types/AuthStore";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const authStore = getStoreValue<AuthStore>('auth');
-  if (!authStore?.user) {
+  const authStore = getStoreValue<AuthStore>("auth");
+  const token = localStorage.getItem("token");
+
+  const isAuthenticated = Boolean(authStore?.user && token);
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
   return <>{children}</>;
 };
 
