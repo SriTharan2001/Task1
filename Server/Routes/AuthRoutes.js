@@ -17,8 +17,8 @@ router.post("/login", login);
 router.post("/register", register);
 router.post("/logout", protect, logout);
 router.get("/users", getAllUsers);
-router.put("/users/:id", updateUser);
-router.delete("/users/:id", deleteUser);
+router.put("/user/:id", updateUser);
+router.delete("/user/:id", deleteUser);
 router.put("/profile/image", protect, upload.single("image"), updateProfileImage);
 router.get("/image/:filename", getProfileImage);
 

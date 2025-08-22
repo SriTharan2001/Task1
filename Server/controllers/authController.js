@@ -18,21 +18,35 @@ conn.once("open", () => {
   gfs.collection("uploads");
 });
 
-// Register
+// Register - TC001, TC002, TC003
 exports.register = async (req, res) => {
   const { email, password, role, userName } = req.body;
+  
+  // TC003: Validate required fields
+  if (!email || !password || !role || !userName) {
+    return res.status(400).json({ 
+      message: "Missing required fields: email, password, role, and userName are required" 
+    });
+  }
+  
   try {
     const existing = await User.findOne({ email });
-    if (existing)
+    if (existing) {
+      // TC002: Return 400 for duplicate email
       return res.status(400).json({ message: "User already exists" });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
-
     const user = new User({ email, password: hashed, role, userName });
     await user.save();
 
-    res.json({
-      user: { ...user.toObject(), id: user._id },
+    // TC001: Return 201 Created with proper response format
+    res.status(201).json({
+      user: {
+        id: user._id,
+        userName: user.userName,
+        email: user.email,
+      },
       message: "User created successfully",
     });
   } catch (err) {
@@ -117,6 +131,19 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// Get User by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ ...user.toObject(), id: user._id });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Update user by ID
 exports.updateUser = async (req, res) => {
   const { userName, email, password, role } = req.body;
@@ -146,15 +173,18 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    const deleted = await User.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" }); // ✅ matches TC012
+    }
 
+    await User.findByIdAndDelete(id);
     res.json({ message: "User deleted successfully" });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // Update profile image
 exports.updateProfileImage = async (req, res) => {
@@ -212,7 +242,6 @@ exports.logout = async (req, res) => {
     res.json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     console.error("Logout error:", err);
-    res.status(500).json({ success: false, message: "Invalid token or session" });
+    res.status(401).json({ success: false, message: "Invalid token" });
   }
 };
-

@@ -10,7 +10,10 @@ require("dotenv").config();
 
 // DB Connection
 const connectDB = require("./config/db.js");
-connectDB();
+// Only connect to DB if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,7 +48,7 @@ const swaggerOptions = {
   },
   apis: ["./Routes/*.js"], // Point to your route files with Swagger comments
 };
-
+ 
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -68,6 +71,7 @@ app.use((req, res, next) => {
 // API Routes
 app.use("/api/auth", require("./Routes/AuthRoutes.js"));
 app.use("/api/auth", require("./Routes/passwordResetRoute.js"));
+app.use("/api/users", require("./Routes/userRoutes.js"));
 app.use("/api/expenses", require("./Routes/expenseRoutes.js"));
 app.use("/api/summary", require("./Routes/summaryRoutes.js"));
 
@@ -78,7 +82,11 @@ app.get("*", (req, res) => {
 });
 
 // Start Server
-server.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📘 Swagger docs at http://localhost:${PORT}/api-docs`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`📘 Swagger docs at http://localhost:${PORT}/api-docs`);
+  });
+}
+
+module.exports = app;

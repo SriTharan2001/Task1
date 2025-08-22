@@ -3,7 +3,7 @@ import { Edit, Trash2, Save, X } from "lucide-react";
 import DataTable from "react-data-table-component";
 import type { TableColumn } from "react-data-table-component";
 import type { Expense } from "../Types/Expense";
-import api from "../utils/api";  // use your axios instance with interceptor
+import api from "../utils/api";
 
 const ExpenseListDesign: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -15,42 +15,40 @@ const ExpenseListDesign: React.FC = () => {
   const [editAmount, setEditAmount] = useState("");
   const [editDate, setEditDate] = useState("");
 
-
-useEffect(() => {
-  const fetchExpensesData = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        setError("User ID not found. Please login.");
-        return;
+  useEffect(() => {
+    const fetchExpensesData = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          setError("User ID not found. Please login.");
+          return;
+        }
+        const response = await api.get(`/api/expenses/fetch/${userId}`);
+        const data = response.data;
+        if (Array.isArray(data)) {
+          setExpenses(data);
+        } else {
+          setExpenses([]);
+          setError("Unexpected response from server.");
+        }
+      } catch (err: unknown) {
+        console.error("Error fetching expenses:", err);
+        if (typeof err === "object" && err !== null && "response" in err) {
+          const response = (err as { response?: { data?: { message?: string } } }).response;
+          setError(response?.data?.message || "Failed to fetch expenses.");
+        } else {
+          setError("Failed to fetch expenses.");
+        }
       }
-      const response = await api.get(`/api/expenses/fetch/${userId}`);
-      const data = response.data;
-
-      if (Array.isArray(data)) {
-        setExpenses(data);
-      } else {
-        setExpenses([]); // fallback
-        console.error("Expected array but got:", data);
-        setError("Unexpected response from server.");
-      }
-    } catch (err: unknown) {
-      console.error("Error fetching expenses:", err);
-      if (typeof err === "object" && err !== null && "response" in err) {
-        const response = (err as { response?: { data?: { message?: string } } }).response;
-        setError(response?.data?.message || "Failed to fetch expenses.");
-      } else {
-        setError("Failed to fetch expenses.");
-      }
-    }
-  };
-
-  fetchExpensesData();
-}, []);
+    };
+    fetchExpensesData();
+  }, []);
 
   const filteredExpenses = expenses.filter((expense) => {
     const expenseDate = expense.date ? new Date(expense.date).toISOString().split("T")[0] : "";
-    const matchCategory = categoryFilter ? expense.category.toLowerCase().includes(categoryFilter.toLowerCase()) : true;
+    const matchCategory = categoryFilter
+      ? expense.category.toLowerCase().includes(categoryFilter.toLowerCase())
+      : true;
     const matchDate = dateFilter ? expenseDate === dateFilter : true;
     return matchCategory && matchDate;
   });
@@ -78,6 +76,7 @@ useEffect(() => {
   };
 
   const saveEdit = async (id: string) => {
+    setError(null); // fix: clear old error before saving
     try {
       if (!editCategory.trim() || !editAmount || !editDate) {
         setError("All fields are required.");
@@ -89,9 +88,10 @@ useEffect(() => {
         date: editDate,
       };
       await api.put(`/api/expenses/${id}`, payload);
-      setExpenses((prev) => prev.map((exp) => (exp._id === id ? { ...exp, ...payload } : exp)));
+      setExpenses((prev) =>
+        prev.map((exp) => (exp._id === id ? { ...exp, ...payload } : exp))
+      );
       cancelEdit();
-      setError(null);
     } catch {
       setError("Failed to update expense.");
     }
@@ -202,25 +202,34 @@ useEffect(() => {
 
       <div className="bg-gray-200 rounded-lg p-5 flex flex-wrap gap-4 mb-6 shadow">
         <div className="flex-1 min-w-[200px]">
-          <label className="block mb-1  font-medium text-gray-700">Filter by Category</label>
-          <input
-            type="text"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            placeholder="Category"
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div className="flex-1 min-w-[200px]">
-          <label className="block mb-1 font-medium text-gray-700">Filter by Date</label>
-          <input
-            aria-label="Filter by date"
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
+  <label className="block mb-1 font-medium text-gray-700" htmlFor="category-filter">
+    Filter by Category
+  </label>
+  <input
+    id="category-filter"
+    aria-label="Filter by category"
+    type="text"
+    value={categoryFilter}
+    onChange={(e) => setCategoryFilter(e.target.value)}
+    placeholder="Category"
+    className="w-full p-2 border rounded"
+  />
+</div>
+
+<div className="flex-1 min-w-[200px]">
+  <label className="block mb-1 font-medium text-gray-700" htmlFor="date-filter">
+    Filter by Date
+  </label>
+  <input
+    id="date-filter"
+    aria-label="Filter by date"
+    type="date"
+    value={dateFilter}
+    onChange={(e) => setDateFilter(e.target.value)}
+    className="w-full p-2 border rounded"
+  />
+</div>
+
         <button onClick={resetFilters} className="bg-yellow-500 h-11 text-white px-4 py-2 mt-7 rounded font-medium hover:bg-yellow-600">
           Reset
         </button>
