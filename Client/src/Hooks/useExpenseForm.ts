@@ -26,7 +26,7 @@ const useExpenseForm = (userId: string) => {
     setFormData((prev) => ({
       ...prev,
       userId: userId, // Ensure userId is always current
-      [name]: value,
+      [name]: name === "amount" ? parseFloat(value) : value,
     }));
   };
 

@@ -117,12 +117,12 @@ const DashboardContent: React.FC = () => {
   }
 
   const pieData = {
-    labels: categoryData.map((d) => `${d.name} (${d.count})`),
+    labels: Array.isArray(categoryData) ? categoryData.map((d) => `${d.name} (${d.count})`) : [],
     datasets: [
       {
-        data: categoryData.map((d) => d.value),
-        backgroundColor: COLORS.slice(0, categoryData.length),
-        borderColor: COLORS.slice(0, categoryData.length),
+        data: Array.isArray(categoryData) ? categoryData.map((d) => d.value) : [],
+        backgroundColor: Array.isArray(categoryData) ? COLORS.slice(0, categoryData.length) : [],
+        borderColor: Array.isArray(categoryData) ? COLORS.slice(0, categoryData.length) : [],
         borderWidth: 1,
       },
     ],

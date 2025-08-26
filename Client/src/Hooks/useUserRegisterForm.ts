@@ -174,7 +174,7 @@ const useUserRegisterForm = () => {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${BASE_URL}/api/auth/users/${userId}`, {
+      const response = await fetch(`${BASE_URL}/api/auth/user/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

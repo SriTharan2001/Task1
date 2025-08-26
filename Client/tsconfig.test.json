@@ -2,7 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "types": ["node", "jsdom", "vitest/globals"]
+    "module": "ESNext",
+    "target": "ES6",
+    "types": ["node", "@testing-library/jest-dom"]
   },
   "include": ["src/test/**/*.ts", "src/test/**/*.tsx", "vitest.config.ts"]
 }

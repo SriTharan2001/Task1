@@ -35,7 +35,7 @@ const fetchUsers = async () => {
 
 const updateUser = async (userData: FormDataType, userId: number) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/auth/users/${userId}`, {
+    const response = await fetch(`${BASE_URL}/api/auth/user/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

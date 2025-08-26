@@ -13,6 +13,6 @@
     "strict": true,
     "moduleResolution": "Node",
     "resolveJsonModule": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node"]
   }
 }

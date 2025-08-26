@@ -162,7 +162,13 @@ exports.updateUser = async (req, res) => {
     }
 
     await user.save();
-    res.json({ message: "User updated successfully" });
+    res.json({
+      message: "User updated successfully",
+      id: user._id,
+      userName: user.userName,
+      email: user.email,
+      role: user.role,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

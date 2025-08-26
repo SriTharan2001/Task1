@@ -3,9 +3,26 @@
     "@babel/core": "^7.28.3",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-typescript": "^7.27.1",
-    "babel-jest": "^30.0.5"
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "@vitejs/plugin-react": "^5.0.1",
+    "babel-jest": "^30.0.5",
+    "eslint": "^9.34.0",
+    "jsdom": "^26.1.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "scripts": {
     "test": "npx jest"
+  },
+  "dependencies": {
+    "express-session": "^1.18.2"
   }
 }

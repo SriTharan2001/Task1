@@ -6,6 +6,7 @@ export interface User {
   role: string;
 }
 
-export interface User {
-  user: User | null;
+// Define UserWithId to use 'id' as a string, potentially replacing or extending User
+export interface UserWithId extends Omit<User, 'objectId'> {
+  id: string;
 }

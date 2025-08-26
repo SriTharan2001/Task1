@@ -2,7 +2,7 @@
 
 import api from "../utils/api";
 
-export const createExpense = async (expense: { category: string; amount: number; date: string, userId: string }) => {
+export const createExpense = async (expense: { category: string; amount: number; date: string, userId: string, title: string }) => {
   try {
     const response = await api.post("/api/expenses", expense);
     return response.data;
