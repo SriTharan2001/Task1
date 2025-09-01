@@ -19,7 +19,7 @@ import {
   Title,
 } from "chart.js";
 
-import type { Chart, TooltipItem, LegendItem } from "chart.js";
+import type { TooltipItem } from "chart.js";
 
 ChartJS.register(
   ArcElement,
@@ -99,14 +99,28 @@ const DashboardContent: React.FC = () => {
   useAutoLogout();
 
   const monthlyData = useMemo(() => getMonthlyExpenseData(summary), [summary]);
-  const pieTotal = useMemo(() =>
-    Array.isArray(categoryData)
-      ? categoryData.reduce((sum, item) => sum + item.value, 0)
-      : 0, [categoryData]);
 
   if (expensesLoading || summaryLoading || categoryLoading || countersLoading) {
     return <div className="p-6 text-center">Loading...</div>;
   }
+
+  // Define the interface for category data when it's an object
+  interface CategoryData {
+    [key: string]: {
+      total: number;
+      count: number;
+    };
+  }
+
+  // Convert categoryData to an array if it's not already, using the interface for type safety
+  const categoryArray = Array.isArray(categoryData)
+    ? categoryData
+    : Object.entries(categoryData as CategoryData).map(([key, value]) => ({
+        name: key,
+        value: value.total,
+        count: value.count,
+      }));
+
 
   if (expenseError || summaryError || categoryError || countersError) {
     return (
@@ -116,18 +130,20 @@ const DashboardContent: React.FC = () => {
     );
   }
 
+  // Use categoryArray for pieData
   const pieData = {
-    labels: Array.isArray(categoryData) ? categoryData.map((d) => `${d.name} (${d.count})`) : [],
+    labels: categoryArray.map((d) => `${d.name} (${d.count})`),
     datasets: [
       {
-        data: Array.isArray(categoryData) ? categoryData.map((d) => d.value) : [],
-        backgroundColor: Array.isArray(categoryData) ? COLORS.slice(0, categoryData.length) : [],
-        borderColor: Array.isArray(categoryData) ? COLORS.slice(0, categoryData.length) : [],
+        data: categoryArray.map((d) => d.value),
+        backgroundColor: COLORS.slice(0, categoryArray.length),
+        borderColor: COLORS.slice(0, categoryArray.length),
         borderWidth: 1,
       },
     ],
   };
 
+  // Pie chart options with updated tooltip to use categoryArray
   const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -137,39 +153,18 @@ const DashboardContent: React.FC = () => {
         labels: {
           usePointStyle: true,
           pointStyle: "rect" as const,
-          font: {
-            size: window.innerWidth < 640 ? 10 : 12,
-          },
+          font: { size: window.innerWidth < 640 ? 10 : 12 },
           padding: 20,
-          generateLabels: (chart: Chart): LegendItem[] => {
-            const labels = chart.data.labels as string[];
-            const dataset = chart.data.datasets[0];
-            const bgColors = Array.isArray(dataset.backgroundColor)
-              ? dataset.backgroundColor
-              : COLORS;
-
-            return labels.map((label, i) => {
-              const value = dataset.data[i] as number;
-              const percent = ((value / pieTotal) * 100).toFixed(1);
-              return {
-                text: `${label} - RS ${value.toFixed(2)} (${percent}%)`,
-                fillStyle: bgColors[i % bgColors.length],
-                strokeStyle: bgColors[i % bgColors.length],
-                pointStyle: "rect",
-                hidden: false,
-                datasetIndex: 0,
-                index: i,
-              };
-            });
-          },
         },
       },
       tooltip: {
         callbacks: {
           label: (context: TooltipItem<"pie">) => {
             const value = context.raw as number;
-            const percentage = ((value / pieTotal) * 100).toFixed(1);
-            return `RS ${value.toFixed(2)} (${percentage}%)`;
+            // Use categoryArray for total calculation
+            const total = categoryArray.reduce((sum, item) => sum + item.value, 0) || 1;
+            const percent = ((value / total) * 100).toFixed(1);
+            return `RS ${value.toFixed(2)} (${percent}%)`;
           },
         },
       },
@@ -181,6 +176,7 @@ const DashboardContent: React.FC = () => {
     },
   };
 
+  // Bar chart data and options (corrected)
   const barData = {
     labels: monthlyData.map((d) => d.month),
     datasets: [

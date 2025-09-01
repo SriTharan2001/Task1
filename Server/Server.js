@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 require("dotenv").config();
+const notificationRoutes = require("./Routes/notificationRoutes");
 
 // DB Connection
 const connectDB = require("./config/db.js");
@@ -25,7 +26,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(session({
-  secret: "your-secret-key",
+  secret: process.env.SESSION_SECRET || "your-secret-key",
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false },
@@ -74,6 +75,7 @@ app.use("/api/auth", require("./Routes/passwordResetRoute.js"));
 app.use("/api/users", require("./Routes/userRoutes.js"));
 app.use("/api/expenses", require("./Routes/expenseRoutes.js"));
 app.use("/api/summary", require("./Routes/summaryRoutes.js"));
+app.use("/api/notifications", notificationRoutes);
 
 // Serve React frontend (in production or development)
 app.use(express.static(path.join(__dirname, "../Client")));

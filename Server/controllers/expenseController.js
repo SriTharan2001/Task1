@@ -1,6 +1,53 @@
 console.log("expenseController.js loaded"); // Added log at the very top
 const Expense = require("../Models/Expense");
 const mongoose = require("mongoose");
+const Notification = require("../Models/Notification"); // Import Notification model
+
+// Function to check monthly expenses and trigger notifications
+exports.checkUserMonthlyExpenses = async (userId) => {
+  try {
+    const now = new Date();
+    // Set to the beginning of the current month (UTC)
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    // Set to the beginning of the next month (UTC)
+    const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+    const userExpenses = await Expense.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      date: {
+        $gte: startOfMonth,
+        $lt: endOfMonth,
+      },
+    });
+
+    const monthlyTotal = userExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+    if (monthlyTotal > 10000) {
+      // Check if a similar alert already exists to avoid duplicates
+      const existingAlert = await Notification.findOne({
+        userId: new mongoose.Types.ObjectId(userId),
+        message: "Your monthly expenses have exceeded 10000.",
+        type: "alert",
+        isRead: false,
+      });
+
+      if (!existingAlert) {
+        const notification = new Notification({
+          userId: new mongoose.Types.ObjectId(userId),
+          message: "Your monthly expenses have exceeded 10000.",
+          type: "alert",
+        });
+        await notification.save();
+        return notification; // Return the created notification to be emitted
+      }
+    }
+    return null; // No new notification created
+  } catch (error) {
+    console.error("Error checking monthly expenses:", error);
+    return null;
+  }
+};
+
 
 exports.fetchUserExpenses = async (req, res) => {
   console.log("fetchUserExpenses called"); // Added log
@@ -15,7 +62,7 @@ exports.fetchUserExpenses = async (req, res) => {
     // Modified query to use the string representation of userId directly
     // Mongoose should convert this string to ObjectId for the query
     const expenses = await Expense.find({ userId: new mongoose.Types.ObjectId(userId) });
-    
+
 
     // Add check for array and log if not an array
     if (!Array.isArray(expenses)) {
@@ -66,6 +113,11 @@ exports.createExpense = async (req, res) => {
 
     await expense.save();
     req.io.emit("expense_update", { type: "CREATE_EXPENSE", payload: expense });
+    // Call the new function to check monthly expenses and notify
+    const newNotification = await exports.checkUserMonthlyExpenses(expense.userId);
+    if (newNotification && req.io) {
+      req.io.emit("notification_update", { type: "NEW_NOTIFICATION", payload: newNotification });
+    }
     res.status(201).json(expense);
   } catch (err) {
     console.error("Create error:", err);
@@ -75,11 +127,17 @@ exports.createExpense = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
   try {
-    const updated = await Expense.findByIdAndUpdate(new mongoose.Types.ObjectId(req.params.id), req.body, { new: true });
+    const { id } = req.params; // Get the ID from params
+    const updated = await Expense.findByIdAndUpdate(new mongoose.Types.ObjectId(id), req.body, { new: true });
     if (!updated) {
       return res.status(404).json({ message: "Expense not found" });
     }
     req.io.emit("expense_update", { type: "UPDATE_EXPENSE", payload: updated });
+    // Call the new function to check monthly expenses and notify
+    const newNotification = await exports.checkUserMonthlyExpenses(updated.userId);
+    if (newNotification && req.io) {
+      req.io.emit("notification_update", { type: "NEW_NOTIFICATION", payload: newNotification });
+    }
     res.json(updated);
   } catch (err) {
     console.error("Update error:", err);
