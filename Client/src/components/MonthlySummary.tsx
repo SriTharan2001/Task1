@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useState, useRef, useContext } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { SummaryData } from "../Hooks/useMonthlySummary";
 import useMonthlySummary from "../Hooks/useMonthlySummary";
+import { ThemeContext } from "../context/ThemeContext";
 
 interface MonthlySummaryDesignProps {
   summary?: SummaryData[];
@@ -66,6 +67,8 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({
     doc.save("monthly-summary.pdf");
   };
 
+  const { theme } = useContext(ThemeContext);
+
   return (
     <div className="max-w-screen-xl mx-auto p-10 bg-blue-100 rounded-lg">
       <div className="flex flex-col gap-4 mb-8">
@@ -124,7 +127,7 @@ const MonthlySummaryDesign: React.FC<MonthlySummaryDesignProps> = ({
             {/* Table */}
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-gradient-to-r from-indigo-900 to-blue-700 text-white">
+                <tr className={`${theme === "dark" ? "bg-blue-600" : "bg-gray-950"} text-amber-50`}>
                   <th className="px-6 py-4 uppercase font-semibold text-left">Month</th>
                   <th className="px-6 py-4 uppercase font-semibold text-left">Total (₹)</th>
                 </tr>

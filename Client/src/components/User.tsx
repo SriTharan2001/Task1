@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { Edit, Trash2, Save, X } from "lucide-react";
 import useUserRegisterForm from "../Hooks/useUserRegisterForm";
 import type { UserWithId, FormDataType } from "../Hooks/useUserRegisterForm";
+import { ThemeContext } from "../context/ThemeContext";
 
 // Compact and accessible field
 const FormField = ({
@@ -119,6 +120,9 @@ const User = () => {
     if (!data.role) errors.role = "Role is required.";
     return errors;
   };
+
+  const { theme } = useContext(ThemeContext);
+
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -243,7 +247,7 @@ const User = () => {
       {/* Table */}
       <div className="overflow-x-auto bg-white rounded-md shadow">
         <table className="min-w-full text-[10px] sm:text-sm">
-          <thead className="bg-gradient-to-r from-blue-900 to-indigo-700 text-white">
+          <thead  className={` text-white ${theme === "dark" ? "bg-blue-600" : "bg-gray-950"}`} >
             <tr>
               <th className="px-3 py-2 text-left font-medium">Username</th>
               <th className="px-3 py-2 text-left font-medium">Email</th>

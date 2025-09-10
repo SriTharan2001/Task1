@@ -1,26 +1,28 @@
-// tailwind.config.js
+const { text } = require('stream/consumers');
+
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{html,js,jsx,ts,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
-  ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        primary: "#14213D",   // dark navy blue
-        accent: "#FCA311",    // orange
-        dark: "#000000",      // black
+        primary: {
+          light: "#ffffff",
+          dark: "#14213D",
+        },
+        accent: {
+          light: "#3E434CFF",
+          dark: "#FCA311",
+        },
+        background: {
+          light: "#3737F6FF",
+          dark: "#01062FF5",
+        },
+        text: {
+          light: "#000000",
+          dark: "#FFFFFF",
+        },
       },
-       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-        roboto: ['Roboto', 'sans-serif'],
-        poppins: ['Poppins', 'sans-serif'],
-        opensans: ['Open Sans', 'sans-serif'],
-        manrope: ['Manrope', 'sans-serif'],
-        dmsans: ['DM Sans', 'sans-serif'],
-        rubik: ['Rubik', 'sans-serif'],
-        sans: ['Inter', 'sans-serif'], // Default fallback
-      }
     },
   },
   plugins: [],

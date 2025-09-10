@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from "react";
+import React, {  useEffect, useMemo, useContext } from "react";
 import { Pie, Bar } from "react-chartjs-2";
 import { useNavigate } from "react-router-dom";
 
@@ -6,6 +6,7 @@ import useExpenseDashboard from "../Hooks/useExpenseDashBoard";
 import useMonthlySummary from "../Hooks/useMonthlySummary";
 import useCategoryExpenses from "../Hooks/useCategoryExpenses";
 import useExpenseCounters from "../Hooks/useExpenseCounters";
+import { ThemeContext } from "../context/ThemeContext";
 import useAutoLogout from "../Hooks/useAutoLogout";
 
 import {
@@ -66,8 +67,8 @@ const getMonthlyExpenseData = (summary: { month: string; total: number }[]) => {
   return data;
 };
 
-const Card: React.FC<{ title: string; value: string }> = ({ title, value }) => (
-  <div className="bg-[#14213D] p-4 md:p-5 rounded-lg text-white shadow-md flex flex-col justify-between h-full">
+const Card: React.FC<{ title: string; value: string; className?: string }> = ({ title, value, className }) => (
+  <div className={`bg-[#14213D] p-4 md:p-5 rounded-lg text-white shadow-md flex flex-col justify-between h-full ${className || ''}`}>
     <h3 className="text-sm sm:text-base md:text-lg lg:text-xl">{title}</h3>
     <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mt-2">{value}</p>
   </div>
@@ -99,12 +100,12 @@ const DashboardContent: React.FC = () => {
   useAutoLogout();
 
   const monthlyData = useMemo(() => getMonthlyExpenseData(summary), [summary]);
+  const { theme } = useContext(ThemeContext);
 
   if (expensesLoading || summaryLoading || categoryLoading || countersLoading) {
     return <div className="p-6 text-center">Loading...</div>;
   }
 
-  // Define the interface for category data when it's an object
   interface CategoryData {
     [key: string]: {
       total: number;
@@ -112,7 +113,6 @@ const DashboardContent: React.FC = () => {
     };
   }
 
-  // Convert categoryData to an array if it's not already, using the interface for type safety
   const categoryArray = Array.isArray(categoryData)
     ? categoryData
     : Object.entries(categoryData as CategoryData).map(([key, value]) => ({
@@ -120,7 +120,6 @@ const DashboardContent: React.FC = () => {
         value: value.total,
         count: value.count,
       }));
-
 
   if (expenseError || summaryError || categoryError || countersError) {
     return (
@@ -130,7 +129,6 @@ const DashboardContent: React.FC = () => {
     );
   }
 
-  // Use categoryArray for pieData
   const pieData = {
     labels: categoryArray.map((d) => `${d.name} (${d.count})`),
     datasets: [
@@ -143,7 +141,6 @@ const DashboardContent: React.FC = () => {
     ],
   };
 
-  // Pie chart options with updated tooltip to use categoryArray
   const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -161,7 +158,6 @@ const DashboardContent: React.FC = () => {
         callbacks: {
           label: (context: TooltipItem<"pie">) => {
             const value = context.raw as number;
-            // Use categoryArray for total calculation
             const total = categoryArray.reduce((sum, item) => sum + item.value, 0) || 1;
             const percent = ((value / total) * 100).toFixed(1);
             return `RS ${value.toFixed(2)} (${percent}%)`;
@@ -176,7 +172,6 @@ const DashboardContent: React.FC = () => {
     },
   };
 
-  // Bar chart data and options (corrected)
   const barData = {
     labels: monthlyData.map((d) => d.month),
     datasets: [
@@ -223,14 +218,16 @@ const DashboardContent: React.FC = () => {
         Expense Dashboard
       </h1>
 
-      {/* Responsive Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <Card title="Total" value={`RS ${counters.total.toFixed(2)}`} />
-        <Card title="This Month" value={`RS ${counters.monthly.toFixed(2)}`} />
-        <Card title="Today" value={`RS ${counters.daily.toFixed(2)}`} />
+      {/* Fixed: use backticks for template string */}
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 
+          `}
+      >
+        <Card className={` ${theme === "dark" ? "bg-blue-600" : "#14213D"}`} title="Total" value={`RS ${counters.total.toFixed(2)}`} />
+        <Card className={` ${theme === "dark" ? "bg-blue-600" : "#14213D"}`} title="This Month" value={`RS ${counters.monthly.toFixed(2)}`} />
+        <Card className={` ${theme === "dark" ? "bg-blue-600" : "#14213D"}`} title="Today" value={`RS ${counters.daily.toFixed(2)}`} />
       </div>
 
-      {/* Responsive Chart Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="order-1">
           <ChartContainer title="Expenses By Category">

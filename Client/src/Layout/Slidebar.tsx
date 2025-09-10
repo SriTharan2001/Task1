@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { NavLink } from "react-router-dom";
 import { getStoreValue } from "pulsy";
 import { getAllowedRoutes } from "../utils/getAllowedRoutes";
 import type { AuthStore } from "../Types/AuthStore";
-import {
-  LayoutDashboard,
-  Plus,
-  List,
-  Calendar,
-  User,
-} from "lucide-react";
+import { LayoutDashboard, Plus, List, Calendar, User } from "lucide-react";
 import { LuListCollapse } from "react-icons/lu";
 import "../index.css";
+import { ThemeContext } from "../context/ThemeContext";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -20,6 +15,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   const [isMobile, setIsMobile] = useState(false);
+  const { theme } = useContext(ThemeContext);
 
   // Detect screen size for mobile view
   useEffect(() => {
@@ -36,21 +32,28 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   const allowedRoutes = getAllowedRoutes(userRole);
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: <LayoutDashboard size={30} /> },
+    {
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: <LayoutDashboard size={30} />,
+    },
     { path: "/user", label: "Users", icon: <User size={30} /> },
     { path: "/add-expense", label: "Add Expense", icon: <Plus size={30} /> },
     { path: "/expenses", label: "View Expenses", icon: <List size={30} /> },
-    { path: "/monthly-summary", label: "Monthly Summary", icon: <Calendar size={30} /> },
+    {
+      path: "/monthly-summary",
+      label: "Monthly Summary",
+      icon: <Calendar size={30} />,
+    },
   ];
 
   const sidebarWidth = collapsed || isMobile ? "w-[64px]" : "w-64";
 
   return (
     <aside
-      style={{ backgroundColor: "#14213D" }}
-      className={`transition-all duration-300 fixed top-0 left-0 z-50 h-screen border-r border-indigo-200 ${sidebarWidth} ${
-        isMobile ? "absolute" : "relative"
-      }`}
+      className={`transition-all duration-300 fixed top-0 left-0 z-50 h-screen border-r border-indigo-200 ${sidebarWidth} 
+        ${isMobile ? "absolute" : "relative"} 
+        ${theme === "dark" ? "bg-blue-600" : "bg-[#14213D]"}`}
     >
       {/* Collapse Toggle */}
       <div
